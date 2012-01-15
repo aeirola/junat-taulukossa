@@ -50,7 +50,7 @@ function update() {
 		error: function(jqXHR, textStatus, errorThrown) {
 			$.ajax({
 				type: "GET",
-				url: TRAIN_XML_PROXY + station,
+				url: TRAIN_XML_PROXY + train,
 				dataType: "xml",
 				success:draw
 			});
