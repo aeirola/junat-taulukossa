@@ -14,10 +14,10 @@
 	<meta charset="utf-8" />
 	<title>Junat taulukossa</title>
 	
-<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 
 <script type="text/javascript">
-var STATION_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/StationInfo?station=';
+var STATION_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/stationInfo?station=';
 var TRAIN_URL = 'junat.html?junanro=';
 var STATION_URL = 'asemat.html?asema=';
 
@@ -65,7 +65,7 @@ function update() { "use strict";
 	});
 }
 
-function draw(xml_doc) { "use strict";
+function draw(xml_doc) {
 	// Get xml
 	var xml = $(xml_doc);
 	var channel = xml.find('channel');
