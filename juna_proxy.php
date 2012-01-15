@@ -1,5 +1,5 @@
 <?php
-$url = "http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=" + $_GET["train"];
+$url = "http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=" . $_GET["train"];
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
