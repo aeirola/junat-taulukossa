@@ -76,14 +76,14 @@ function update() { "use strict";
     });
 }
 
-function draw(xml_doc) { "use strict";
+function draw(xml_doc) {
     // Get xml
     var xml = $(xml_doc);
     var channel = xml.find('channel');
     
     // Header data
-    $('#title').html(channel.children('title'));
-    $('#lastbuilddate').html(channel.children('lastbuilddate'));
+    $('#title').html(channel.children('title').text());
+    $('#lastbuilddate').html(channel.children('lastbuilddate').text());
     
     // Unused header data
     //$('#description').html(channel.children('description'));
@@ -109,7 +109,8 @@ function draw(xml_doc) { "use strict";
             
             // Train number
             var train_nr = item.children('guid').text();
-            row.append($('<td>').append($('<a/>').attr('href', TRAIN_URL + train_nr).html(item.children('title'))));
+            row.append($('<td>').append($('<a/>').attr('href', 
+                                                       TRAIN_URL + train_nr).html(item.children('title'))));
             
             // Station (from / to)
             var station = item.children('tostation').text();
@@ -117,23 +118,23 @@ function draw(xml_doc) { "use strict";
             row.append($('<td>').append($('<a/>').attr('href', STATION_URL + station).html(station)));
 
             //row.append($('<td>').html(item.children('scheduledtime')));
-            row.append($('<td>').html(item.children('scheduleddeparttime')));
+            row.append($('<td>').html(item.children('scheduleddeparttime').text()));
 
             //row.append($('<td>').html(item.children('eta')));
-            row.append($('<td>').html(item.children('etd')));
+            row.append($('<td>').html(item.children('etd').text()));
 
-            row.append($('<td>').html(item.children('status')));
+            row.append($('<td>').html(item.children('status').text()));
 
-            row.append($('<td>').html(item.children('lateness')));
+            row.append($('<td>').html(item.children('lateness').text()));
 
-            row.append($('<td>').html(item.children('reasoncode')));
+            row.append($('<td>').html(item.children('reasoncode').text()));
 
             // Unused data
-            //row.append($('<td>').html($(this).children('pubdate')));
-            //row.append($('<td>').html(type));
-            //row.append($('<td>').html(category));
-            //row.append($('<td>').html(item.children('description')));
-            //row.append($('<td>').html(item.children('completed')));
+            //row.append($('<td>').html($(this).children('pubdate').text()));
+            //row.append($('<td>').html(type).text());
+            //row.append($('<td>').html(category).text());
+            //row.append($('<td>').html(item.children('description').text()));
+            //row.append($('<td>').html(item.children('completed').text()));
             
             table.append(row);
         }

@@ -64,15 +64,15 @@ function draw(xml_doc) { "use strict";
     var xml = $(xml_doc);
     var channel = xml.find('channel');
     
-    $('#title').html(channel.children('title'));
-    $('#train').html(channel.children('trainguid'));
-    $('#lastbuilddate').html(channel.children('lastbuilddate'));
-    $('#startstation').html(channel.children('startstation'));
-    $('#endstation').html(channel.children('endstation'));
-    $('#speed').html(channel.children('speed'));
-    $('#status').html(channel.children('status'));
-    $('#reasoncode').html(channel.children('reasoncode'));
-    $('#lateness').html(channel.children('lateness'));
+    $('#title').html(channel.children('title').text());
+    $('#train').html(channel.children('trainguid').text());
+    $('#lastbuilddate').html(channel.children('lastbuilddate').text());
+    $('#startstation').html(channel.children('startstation').text());
+    $('#endstation').html(channel.children('endstation').text());
+    $('#speed').html(channel.children('speed').text());
+    $('#status').html(channel.children('status').text());
+    $('#reasoncode').html(channel.children('reasoncode').text());
+    $('#lateness').html(channel.children('lateness').text());
     
     var table = $('#stations');
     table.empty();
@@ -84,16 +84,16 @@ function draw(xml_doc) { "use strict";
         var row = $('<tr>');
         
         var station = item.children('stationcode').text();
-        //row.append($('<td>').html(item.children('fromstation')));
+        //row.append($('<td>').html(item.children('fromstation').text()));
         row.append($('<td>').append($('<a>').attr('href', STATION_URL + station).html(station)));
         
-        row.append($('<td>').html($(this).children('scheduledtime')));
-        row.append($('<td>').html($(this).children('scheduleddeparttime')));
-        row.append($('<td>').html($(this).children('eta')));
-        row.append($('<td>').html($(this).children('etd')));
+        row.append($('<td>').html($(this).children('scheduledtime').text()));
+        row.append($('<td>').html($(this).children('scheduleddeparttime').text()));
+        row.append($('<td>').html($(this).children('eta').text()));
+        row.append($('<td>').html($(this).children('etd').text()));
 
-        row.append($('<td>').html($(this).children('completed')));
-        row.append($('<td>').html($(this).children('status')));
+        row.append($('<td>').html($(this).children('completed').text()));
+        row.append($('<td>').html($(this).children('status').text()));
         table.append(row);
     });
 }
