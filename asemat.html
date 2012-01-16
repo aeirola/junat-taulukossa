@@ -110,7 +110,7 @@ function draw(xml_doc) {
             // Train number
             var train_nr = item.children('guid').text();
             row.append($('<td>').append($('<a/>').attr('href', 
-                                                       TRAIN_URL + train_nr).html(item.children('title'))));
+                                                       TRAIN_URL + train_nr).html(item.children('title').text())));
             
             // Station (from / to)
             var station = item.children('tostation').text();
