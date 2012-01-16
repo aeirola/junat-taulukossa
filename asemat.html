@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!-- 
-	Junat taulukossa palvelu
-	
-	Koska VR:n oma Lähtevät ja saapuvat junat (http://ext-service.vr.fi/juku/asema.action?junalaji=ll&asema=HKI) 
-	on nihkee, niin piti tehdä parempi. Perustuen VRn Junat kartalla rajapintaan 
-	(http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/), tämä sivu hakee
-	aseman tiedot ja näyttää ne taulukossa.
-	
-	Axel Eirola. 2012
+    Junat taulukossa palvelu
+    
+    Koska VR:n oma Lähtevät ja saapuvat junat (http://ext-service.vr.fi/juku/asema.action?junalaji=ll&asema=HKI) 
+    on nihkee, niin piti tehdä parempi. Perustuen VRn Junat kartalla rajapintaan 
+    (http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/), tämä sivu hakee
+    aseman tiedot ja näyttää ne taulukossa.
+    
+    Axel Eirola. 2012
 -->
 <html>
 <head>
-	<meta charset="utf-8" />
-	<title>Junat taulukossa</title>
-	
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Junat taulukossa</title>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 
 <script type="text/javascript">
 var STATION_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/stationInfo?station=';
@@ -25,201 +25,203 @@ var STATION_URL = 'asemat.html?asema=';
 $(document).ready(setValues);
 $(document).ready(update);
 
-function setValues() {
-	function urlParam(name) { "use strict";
-	    var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
-		if (results) {
-		    return results[1];
-		} else {
-		    return null;
-		}
-	}
-	
-	// Station
-	var station = urlParam('asema') || 'hki';
-	$('#station').val(station)
-	
-	// Train type
-	var train_type = urlParam('junalaji') || '0';
-	
-	switch(train_type) {
-		case '1':
-			$('#remote_trains').prop('checked', true);
-			break;
-		case '2':
-			$('#local_trains').prop('checked', true);
-			break;
-		case '0':
-		default:
-			$('#all_trains').prop('checked', true);
-			break;
-	}
+function setValues() { "use strict";
+    function urlParam(name) {
+        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results) {
+            return results[1];
+        } else {
+            return null;
+        }
+    }
+    
+    // Station
+    var station = urlParam('asema') || 'hki';
+    $('#station').val(station);
+    
+    // Train type
+    var train_type = urlParam('junalaji') || '0';
+    
+    switch(train_type) {
+        case '1':
+            $('#remote_trains').prop('checked', true);
+            break;
+        case '2':
+            $('#local_trains').prop('checked', true);
+            break;
+        case '0':
+        default:
+            $('#all_trains').prop('checked', true);
+            break;
+    }
 }
 
 function update() { "use strict";
-	var station = $('#station').val().toUpperCase()
-	$.ajax({
-		type: "GET",
-		url: STATION_XML_URL + station,
-		dataType: "xml",
-		success: draw,
-		error: function(jqXHR, textStatus, errorThrown) {
-			$.ajax({
-				type: "GET",
-				url: STATION_XML_PROXY + station,
-				dataType: "xml",
-				success:draw
-			});
-		}
-	});
+    var station = $('#station').val().toUpperCase();
+    $.ajax({
+        type: "GET",
+        url: STATION_XML_URL + station,
+        dataType: "xml",
+        crossDomain: true,
+        success: draw,
+        error: function(jqXHR, textStatus, errorThrown) {
+            $.ajax({
+                type: "GET",
+                url: STATION_XML_PROXY + station,
+                dataType: "xml",
+                crossDomain: false,
+                success:draw
+            });
+        }
+    });
 }
 
-function draw(xml_doc) {
-	// Get xml
-	var xml = $(xml_doc);
-	var channel = xml.find('channel');
-	
-	// Header data
-	$('#title').html(channel.children('title'));
-	$('#lastbuilddate').html(channel.children('lastbuilddate'));
-	
-	// Unused header data
-	//$('#description').html(channel.children('description'));
-	//$('#category').html(channel.children('category'));
-	//$('#point').html(channel.children('point'));
-	
-	// Traintypes to show
-	var traintypes = $('input:radio[name=train]:checked').val();
-	
-	// Get and init table
-	var table = $('#trains');
-	table.empty();
-	add_headers();
-	
-	var items = channel.children('item');
-	items.each(function(i) {
-		var item = $(this);
-		var category = item.children('category').text();
-		if (traintypes === "0" || category === traintypes) {
-			var type = item.children('cat').text();
-			
-			var row = $('<tr>');
-			
-			// Train number
-			var train_nr = item.children('guid').text();
-			row.append($('<td>').append($('<a>').attr('href', TRAIN_URL + train_nr).html(item.children('title'))));
-			
-			// Station (from / to)
-			var station = item.children('tostation').text();
-			//row.append($('<td>').html(item.children('fromstation')));
-			row.append($('<td>').append($('<a>').attr('href', STATION_URL + station).html(station)));
+function draw(xml_doc) { "use strict";
+    // Get xml
+    var xml = $(xml_doc);
+    var channel = xml.find('channel');
+    
+    // Header data
+    $('#title').html(channel.children('title'));
+    $('#lastbuilddate').html(channel.children('lastbuilddate'));
+    
+    // Unused header data
+    //$('#description').html(channel.children('description'));
+    //$('#category').html(channel.children('category'));
+    //$('#point').html(channel.children('point'));
+    
+    // Traintypes to show
+    var traintypes = $('input:radio[name=train]:checked').val();
+    
+    // Get and init table
+    var table = $('#trains');
+    table.empty();
+    add_headers();
+    
+    var items = channel.children('item');
+    items.each(function(i) {
+        var item = $(this);
+        var category = item.children('category').text();
+        if (traintypes === "0" || category === traintypes) {
+            var type = item.children('cat').text();
+            
+            var row = $('<tr>');
+            
+            // Train number
+            var train_nr = item.children('guid').text();
+            row.append($('<td>').append($('<a/>').attr('href', TRAIN_URL + train_nr).html(item.children('title'))));
+            
+            // Station (from / to)
+            var station = item.children('tostation').text();
+            //row.append($('<td>').html(item.children('fromstation')));
+            row.append($('<td>').append($('<a/>').attr('href', STATION_URL + station).html(station)));
 
-			//row.append($('<td>').html(item.children('scheduledtime')));
-			row.append($('<td>').html(item.children('scheduleddeparttime')));
+            //row.append($('<td>').html(item.children('scheduledtime')));
+            row.append($('<td>').html(item.children('scheduleddeparttime')));
 
-			//row.append($('<td>').html(item.children('eta')));
-			row.append($('<td>').html(item.children('etd')));
+            //row.append($('<td>').html(item.children('eta')));
+            row.append($('<td>').html(item.children('etd')));
 
-			row.append($('<td>').html(item.children('status')));
+            row.append($('<td>').html(item.children('status')));
 
-			row.append($('<td>').html(item.children('lateness')));
+            row.append($('<td>').html(item.children('lateness')));
 
-			row.append($('<td>').html(item.children('reasoncode')));
+            row.append($('<td>').html(item.children('reasoncode')));
 
-			// Unused data
-			//row.append($('<td>').html($(this).children('pubdate')));
-			//row.append($('<td>').html(type));
-			//row.append($('<td>').html(category));
-			//row.append($('<td>').html(item.children('description')));
-			//row.append($('<td>').html(item.children('completed')));
-			
-			table.append(row);
-		}
-	});
-};
+            // Unused data
+            //row.append($('<td>').html($(this).children('pubdate')));
+            //row.append($('<td>').html(type));
+            //row.append($('<td>').html(category));
+            //row.append($('<td>').html(item.children('description')));
+            //row.append($('<td>').html(item.children('completed')));
+            
+            table.append(row);
+        }
+    });
+}
 
-function add_headers() {
-	var table = $('#trains');
-	var row = $('<tr>')
-	//row.append($('<th>').html('pubdate'))
-	//row.append($('<th>').html('guid'))
-	row.append($('<th>').html('Juna'))
-	//row.append($('<th>').html('Luokka'))
-	//row.append($('<th>').html('category'))
-	//row.append($('<th>').html('fromstation'))
-	row.append($('<th>').html('Määränpää'))
-	//row.append($('<th>').html('description'))
-	//row.append($('<th>').html('scheduledtime'))
-	row.append($('<th>').html('Lähtöaika'))
-	//row.append($('<th>').html('eta'))
-	row.append($('<th>').html('Arivoitu aika'))
-	row.append($('<th>').html('Tila'))
-	row.append($('<th>').html('Myöhässä'))
-	row.append($('<th>').html('Syy'))
-	//row.append($('<th>').html('completed'))
-	table.append(row)
+function add_headers() { "use strict";
+    var table = $('#trains');
+    var row = $('<tr>');
+    //row.append($('<th>').html('pubdate'));
+    //row.append($('<th>').html('guid'));
+    row.append($('<th>').html('Juna'));
+    //row.append($('<th>').html('Luokka'));
+    //row.append($('<th>').html('category'));
+    //row.append($('<th>').html('fromstation'));
+    row.append($('<th>').html('Määränpää'));
+    //row.append($('<th>').html('description'));
+    //row.append($('<th>').html('scheduledtime'));
+    row.append($('<th>').html('Lähtöaika'));
+    //row.append($('<th>').html('eta'));
+    row.append($('<th>').html('Arivoitu aika'));
+    row.append($('<th>').html('Tila'));
+    row.append($('<th>').html('Myöhässä'));
+    row.append($('<th>').html('Syy'));
+    //row.append($('<th>').html('completed'));
+    table.append(row);
 }
 </script>
 <style type="text/css">
-	body {
-		font-family:sans-serif;
-	}
-	
-	h1#title {
-		color:#C00;
-		margin:0;
-	}
-	
-	p#lastbuilddate {
-		color:gray;
-		margin:0;
-		font-style:italic;
-	}
-	
-	table#trains {
-		border:none;
-	}
-	
-	table#trains th {
-		color:white;
-		background:#C00;
-		padding: 0.1em 1em 0.1em 1em;
-	}
-	
-	table#trains a {
-		color:#C00;
-		text-decoration:none;
-	}
-	
-	table#trains td {
-		padding: 0.1em 0.2em 0.1em 0.2em;
-	}
-	
-	table#trains tr:nth-child(even) {
-		background: #FFF;
-	}
-	
-	table#trains tr:nth-child(odd) {
-		background: #DDD;
-	}
-	
+    body {
+        font-family:sans-serif;
+    }
+    
+    h1#title {
+        color:#C00;
+        margin:0;
+    }
+    
+    p#lastbuilddate {
+        color:gray;
+        margin:0;
+        font-style:italic;
+    }
+    
+    table#trains {
+        border:none;
+    }
+    
+    table#trains th {
+        color:white;
+        background:#C00;
+        padding: 0.1em 1em 0.1em 1em;
+    }
+    
+    table#trains a {
+        color:#C00;
+        text-decoration:none;
+    }
+    
+    table#trains td {
+        padding: 0.1em 0.2em 0.1em 0.2em;
+    }
+    
+    table#trains tr:nth-child(even) {
+        background: #FFF;
+    }
+    
+    table#trains tr:nth-child(odd) {
+        background: #DDD;
+    }
+    
 </style>
 </head>
 
 <body>
-	<input id='station' type="text" onchange="update()"/>
-	
-	<input type="radio" name="train" id="remote_trains" value="1" onchange="update()"/>
-	<label for="remote_trains">Kaukojunat</label>
-	
-	<input type="radio" name="train" id="local_trains" value="2"  onchange="update()"/>
-	<label for="local_trains">Lähijunat</label>
-	
-	<input type="radio" name="train" id="all_trains" value="0"  onchange="update()" checked="checked"/>
-	<label for="all_trains">Kaikki</label>
-	
-	<h1 id='title'>...</h1>
-	<p id='lastbuilddate'>...</p>
-	<table id="trains"></table>
+    <input id='station' type="text" onchange="update()"/>
+    
+    <input type="radio" name="train" id="remote_trains" value="1" onchange="update()"/>
+    <label for="remote_trains">Kaukojunat</label>
+    
+    <input type="radio" name="train" id="local_trains" value="2"  onchange="update()"/>
+    <label for="local_trains">Lähijunat</label>
+    
+    <input type="radio" name="train" id="all_trains" value="0"  onchange="update()" checked="checked"/>
+    <label for="all_trains">Kaikki</label>
+    
+    <h1 id='title'>...</h1>
+    <p id='lastbuilddate'>...</p>
+    <table id="trains"></table>
 </body>
 </html>
