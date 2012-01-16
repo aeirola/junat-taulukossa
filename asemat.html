@@ -58,22 +58,22 @@ function setValues() { "use strict";
 
 function update() { "use strict";
     var station = $('#station').val().toUpperCase();
-    $.ajax({
-        type: "GET",
-        url: STATION_XML_URL + station,
-        dataType: "xml",
-        crossDomain: true,
-        success: draw,
-        error: function(jqXHR, textStatus, errorThrown) {
-            $.ajax({
-                type: "GET",
-                url: STATION_XML_PROXY + station,
-                dataType: "xml",
-                crossDomain: false,
-                success:draw
-            });
-        }
-    });
+    
+    if (location.protocol === 'file:') {
+        $.ajax({
+            type: "GET",
+            url: STATION_XML_URL + station,
+            dataType: "xml",
+            success: draw
+        });
+    } else {
+        $.ajax({
+            type: "GET",
+            url: STATION_XML_PROXY + station,
+            dataType: "xml",
+            success: draw
+        });
+    }
 }
 
 function draw(xml_doc) {

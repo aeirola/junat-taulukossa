@@ -42,22 +42,21 @@ function setValues() { "use strict";
 
 function update() { "use strict";
     var train = $('#train_input').val().toUpperCase();
-    $.ajax({
-        type: "GET",
-        url: TRAIN_XML_URL + train,
-        dataType: "xml",
-        crossDomain: true,
-        success: draw,
-        error: function(jqXHR, textStatus, errorThrown) {
-            $.ajax({
-                type: "GET",
-                url: TRAIN_XML_PROXY + train,
-                dataType: "xml",
-                crossDomain: false,
-                success:draw
-            });
-        }
-    });
+    if (location.protocol === 'file:') {
+        $.ajax({
+            type: "GET",
+            url: TRAIN_XML_URL + train,
+            dataType: "xml",
+            success: draw
+        });
+    } else {
+        $.ajax({
+            type: "GET",
+            url: TRAIN_XML_PROXY + train,
+            dataType: "xml",
+            success: draw
+        });
+    }
 }
 
 function draw(xml_doc) { "use strict";
@@ -159,7 +158,6 @@ function add_headers() { "use strict";
 
 <body>
     <input id='train_input' type="text" onchange="update()"/>
-    
     <h1 id='title'>...</h1>
     <p id='lastbuilddate'>...</p>
     <p>
