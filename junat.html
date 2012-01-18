@@ -51,6 +51,8 @@ function setValues() { 'use strict';
             $('#local_trains').prop('checked', true);
             break;
         case '0':
+            $('#all_trains').prop('checked', true);
+            break;
         default:
             $('#all_trains').prop('checked', true);
             break;
@@ -253,7 +255,7 @@ function drawTrain(xml_doc) { 'use strict';
     });
 }
 
-function drawTrainInfo(channel) { 'use strinct';
+function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
     $('#status').html(channel.children('status').text());
     $('#reasoncode').html(channel.children('reasoncode').text());
@@ -284,7 +286,7 @@ function getLink(input) { 'use strict';
         }).html(input);
 }
 
-function statusToString(status) {
+function statusToString(status) { 'use strict';
     switch(status) {
         case '1':
             return 'Ajoissa';
@@ -302,7 +304,7 @@ function statusToString(status) {
 // Helpers
 function diffToNow(timeString) { 'use strict';
     var fields = timeString.split(':');
-    var trainMinutes = 60*parseInt(fields[0]) + parseInt(fields[1]);
+    var trainMinutes = 60*parseInt(fields[0], 10) + parseInt(fields[1], 10);
 
     var now = new Date();
     var nowMinutes = now.getHours()*60 + now.getMinutes();
@@ -383,7 +385,7 @@ function getUrlParam(name) { 'use strict';
         <input id='input' type='text' size='8' onchange='update()'/>
         (<span id='title'></span>)
     </h1>
-    <p id='lastbuilddate'/>
+    <p id='lastbuilddate'></p>
     <p id='station_info' style='display: none'>
         <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
         <label for='remote_trains'>Kaukojunat</label>
