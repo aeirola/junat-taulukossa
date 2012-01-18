@@ -22,18 +22,21 @@ var STATION_XML_PROXY = "asema_proxy.php?station=";
 var TRAIN_URL = 'junat.html?junanro=';
 var STATION_URL = 'asemat.html?asema=';
 
+var HISTORY_MINUTES = 5;
+
 $(document).ready(setValues);
 $(document).ready(update);
 
-function setValues() { "use strict";
-    function urlParam(name) {
-        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results) {
-            return results[1];
-        } else {
-            return null;
-        }
+function urlParam(name) { "use strict";
+    var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results) {
+        return results[1];
+    } else {
+        return null;
     }
+}
+
+function setValues() { "use strict";
     
     // Station
     var station = urlParam('asema') || 'hki';
@@ -76,7 +79,18 @@ function update() { "use strict";
     }
 }
 
-function draw(xml_doc) {
+function diff_to_now(time_string) { "use strict";
+    var fields = time_string.split(':');
+    var train_minutes = 60*parseInt(fields[0]) + parseInt(fields[1]);
+
+    var now = new Date();
+    var now_minutes = now.getHours()*60 + now.getMinutes();
+    
+    var diff = now_minutes - train_minutes;
+    return diff % (24*60);
+}
+
+function draw(xml_doc) { "use strict";
     // Get xml
     var xml = $(xml_doc);
     var channel = xml.find('channel');
@@ -98,14 +112,26 @@ function draw(xml_doc) {
     table.empty();
     add_headers();
     
+    // Loop over items
     var items = channel.children('item');
+    var show_rest = false;
     items.each(function(i) {
         var item = $(this);
         var category = item.children('category').text();
-        if (traintypes === "0" || category === traintypes) {
-            var type = item.children('cat').text();
+        var estimated_time = item.children('etd').text();
+        
+        if ((traintypes === "0" || category === traintypes) && 
+            (show_rest || (diff_to_now(estimated_time) < HISTORY_MINUTES))) {
             
+            var scheduled_time = item.children('scheduleddeparttime').text();
+            var type = item.children('cat').text();
             var row = $('<tr>');
+            
+            // Check if we are past now
+            if (!show_rest && diff_to_now(scheduled_time) <= 0) {
+                show_rest = true;
+                row.addClass('now');
+            }
             
             // Train number
             var train_nr = item.children('guid').text();
@@ -116,19 +142,19 @@ function draw(xml_doc) {
             var station = item.children('tostation').text();
             //row.append($('<td>').html(item.children('fromstation')));
             row.append($('<td>').append($('<a/>').attr('href', STATION_URL + station).html(station)));
-
+            
             //row.append($('<td>').html(item.children('scheduledtime')));
-            row.append($('<td>').html(item.children('scheduleddeparttime').text()));
-
+            row.append($('<td>').html(scheduled_time));
+            
             //row.append($('<td>').html(item.children('eta')));
-            row.append($('<td>').html(item.children('etd').text()));
-
+            row.append($('<td>').html(estimated_time));
+            
             row.append($('<td>').html(item.children('status').text()));
-
+            
             row.append($('<td>').html(item.children('lateness').text()));
-
+            
             row.append($('<td>').html(item.children('reasoncode').text()));
-
+            
             // Unused data
             //row.append($('<td>').html($(this).children('pubdate').text()));
             //row.append($('<td>').html(type).text());
@@ -204,6 +230,10 @@ function add_headers() { "use strict";
     
     table#trains tr:nth-child(odd) {
         background: #DDD;
+    }
+    
+    table#trains tr.now td {
+        border-top: 3px solid #C00;
     }
     
 </style>
