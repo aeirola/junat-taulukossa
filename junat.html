@@ -11,113 +11,331 @@
 -->
 <html>
 <head>
-    <meta charset="utf-8" />
+    <meta charset='utf-8' />
     <title>Junat taulukossa</title>
     
-<script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 
-<script type="text/javascript">
+<script type='text/javascript'>
+var STATION_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/stationInfo?station=';
+var STATION_XML_PROXY_URL = 'proxy.php?station=';
+
 var TRAIN_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=';
-var TRAIN_XML_PROXY = "juna_proxy.php?train=";
-var TRAIN_URL = 'junat.html?junanro=';
-var STATION_URL = 'asemat.html?asema=';
+var TRAIN_XML_PROXY_URL = 'proxy.php?train=';
+
+var HISTORY_MINUTES = 5;
 
 $(document).ready(setValues);
 $(document).ready(update);
 
-function setValues() { "use strict";
-    function urlParam(name) {
-        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results) {
-            return results[1];
-        } else {
-            return null;
-        }
-    }
+function setValues() { 'use strict';
+    // Input
+    var input = getUrlParam('asema') || 
+                getUrlParam('junanro') || 
+                getUrlParam('juna') || 
+                getUrlParam('input') || 
+                'HKI';
+    $('#input').val(input);
     
-    // Station
-    var train = urlParam('junanro') || '';
-    $('#train_input').val(train);
+    // Train type
+    var train_type = getUrlParam('junalaji') || 
+                     getUrlParam('laji') || 
+                     getUrlParam('cat') || 
+                     getUrlParam('category') || 
+                     '0';
+    switch(train_type) {
+        case '1':
+            $('#remote_trains').prop('checked', true);
+            break;
+        case '2':
+            $('#local_trains').prop('checked', true);
+            break;
+        case '0':
+        default:
+            $('#all_trains').prop('checked', true);
+            break;
+    }
 }
 
-function update() { "use strict";
-    var train = $('#train_input').val().toUpperCase();
+function update () { 'use strict';
+    var input = $('#input').val().toUpperCase();
+    
+    if (/\d/.test(input)) {
+        // Trains contain numbers
+        updateTrain(input);
+    } else {
+        // Stations don't
+        updateStation(input);
+    }
+}
+
+// Station information drawing
+function updateStation(station) { 'use strict';
     if (location.protocol === 'file:') {
         $.ajax({
-            type: "GET",
-            url: TRAIN_XML_URL + train,
-            dataType: "xml",
-            success: draw
+            type: 'GET',
+            url: STATION_XML_URL + station,
+            dataType: 'xml',
+            cache: false,
+            success: drawStation
         });
     } else {
         $.ajax({
-            type: "GET",
-            url: TRAIN_XML_PROXY + train,
-            dataType: "xml",
-            success: draw
+            type: 'GET',
+            url: STATION_XML_PROXY_URL + station,
+            dataType: 'xml',
+            cache: false,
+            success: drawStation
         });
     }
 }
 
-function draw(xml_doc) { "use strict";
+function drawStation(xml_doc) { 'use strict';
+    // Get xml
+    var xml = $(xml_doc);
+    var channel = xml.find('channel');
+    
+    // Header data
+    $('#title').html(channel.children('title').text());
+    $('#lastbuilddate').html(channel.children('lastbuilddate').text());
+    
+    // Unused header data
+    //$('#description').html(channel.children('description'));
+    //$('#category').html(channel.children('category'));
+    //$('#point').html(channel.children('point'));
+    drawStationInfo();
+    
+    // Traintypes to show
+    var traintypes = $('input:radio[name=train]:checked').val();
+    
+    // Get and init table
+    var table = $('#table');
+    table.empty();
+    drawTrainHeaders();
+    
+    // Loop over items
+    var items = channel.children('item');
+    var past_now = false;
+    items.each(function(i) {
+        var item = $(this);
+        var category = item.children('category').text();
+        var estimated_time = item.children('etd').text();
+        
+        if ((traintypes === '0' || category === traintypes) && 
+            (past_now || (diffToNow(estimated_time) < HISTORY_MINUTES))) {
+            
+            var scheduled_time = item.children('scheduleddeparttime').text();
+            var type = item.children('cat').text();
+            var row = $('<tr>');
+            
+            // Check if we are past now
+            if (!past_now && diffToNow(scheduled_time) <= 0) {
+                past_now = true;
+                row.addClass('now');
+            }
+            
+            // Train number
+            var trainNr = item.children('guid').text();
+            row.append($('<td>').append(getLink(trainNr).html(item.children('title').text())));
+            
+            // Station (from / to)
+            var station = item.children('tostation').text();
+            //row.append($('<td>').html(item.children('fromstation')));
+            row.append($('<td>').append(getLink(station)));
+            
+            //row.append($('<td>').html(item.children('scheduledtime')));
+            row.append($('<td>').html(scheduled_time));
+            
+            //row.append($('<td>').html(item.children('eta')));
+            row.append($('<td>').html(estimated_time));
+            
+            var status = item.children('status').text();
+            var lateness = item.children('lateness').text();
+            row.append($('<td>').html(statusToString(status) + " (" + lateness + "s)"));
+            row.append($('<td>').html(item.children('reasoncode').text()));
+            
+            // Unused data
+            //row.append($('<td>').html($(this).children('pubdate').text()));
+            //row.append($('<td>').html(type).text());
+            //row.append($('<td>').html(category).text());
+            //row.append($('<td>').html(item.children('description').text()));
+            //row.append($('<td>').html(item.children('completed').text()));
+            
+            table.append(row);
+        }
+    });
+}
+
+function drawStationInfo() { 'use strict';
+    $('#station_info').show();
+    $('#train_info').hide();
+}
+
+function drawTrainHeaders() { 'use strict';
+    var table = $('#table');
+    var row = $('<tr>');
+    //row.append($('<th>').html('pubdate'));
+    //row.append($('<th>').html('guid'));
+    row.append($('<th>').html('Juna'));
+    //row.append($('<th>').html('Luokka'));
+    //row.append($('<th>').html('category'));
+    //row.append($('<th>').html('fromstation'));
+    row.append($('<th>').html('Määränpää'));
+    //row.append($('<th>').html('description'));
+    //row.append($('<th>').html('scheduledtime'));
+    row.append($('<th>').html('Lähtöaika'));
+    //row.append($('<th>').html('eta'));
+    row.append($('<th>').html('Arivoitu aika'));
+    row.append($('<th>').html('Tila'));
+    //row.append($('<th>').html('Myöhässä'));
+    row.append($('<th>').html('Syy'));
+    //row.append($('<th>').html('completed'));
+    table.append(row);
+}
+
+// Train information drawing
+function updateTrain(train) { 'use strict';
+    if (location.protocol === 'file:') {
+        $.ajax({
+            type: 'GET',
+            url: TRAIN_XML_URL + train,
+            dataType: 'xml',
+            cache: false,
+            success: drawTrain
+        });
+    } else {
+        $.ajax({
+            type: 'GET',
+            url: TRAIN_XML_PROXY_URL + train,
+            dataType: 'xml',
+            cache: false,
+            success: drawTrain
+        });
+    }
+}
+
+function drawTrain(xml_doc) { 'use strict';
     var xml = $(xml_doc);
     var channel = xml.find('channel');
     
     $('#title').html(channel.children('title').text());
-    $('#train').html(channel.children('trainguid').text());
     $('#lastbuilddate').html(channel.children('lastbuilddate').text());
-    $('#startstation').html(channel.children('startstation').text());
-    $('#endstation').html(channel.children('endstation').text());
-    $('#speed').html(channel.children('speed').text());
-    $('#status').html(channel.children('status').text());
-    $('#reasoncode').html(channel.children('reasoncode').text());
-    $('#lateness').html(channel.children('lateness').text());
+    drawTrainInfo(channel);
     
-    var table = $('#stations');
+    var table = $('#table');
     table.empty();
-    add_headers();
+    drawStationHeaders();
     
     var items = channel.children('item');
+    var past_now = false;
     items.each(function(i) {
         var item = $(this);
+        var completed = $(this).children('completed').text();
         var row = $('<tr>');
         
+        // Check if we are past now
+        if (!past_now && completed === '0') {
+            past_now = true;
+            row.addClass('now');
+        }
+        
         var station = item.children('stationcode').text();
-        //row.append($('<td>').html(item.children('fromstation').text()));
-        row.append($('<td>').append($('<a>').attr('href', STATION_URL + station).html(station)));
+        row.append($('<td>').append(getLink(station)));
         
         row.append($('<td>').html($(this).children('scheduledtime').text()));
         row.append($('<td>').html($(this).children('scheduleddeparttime').text()));
         row.append($('<td>').html($(this).children('eta').text()));
         row.append($('<td>').html($(this).children('etd').text()));
 
-        row.append($('<td>').html($(this).children('completed').text()));
-        row.append($('<td>').html($(this).children('status').text()));
+        var status = $(this).children('status').text();
+        row.append($('<td>').html(statusToString(status)));
         table.append(row);
     });
 }
 
-function add_headers() { "use strict";
-    var table = $('#stations');
+function drawTrainInfo(channel) { 'use strinct';
+    $('#speed').html(channel.children('speed').text());
+    $('#status').html(channel.children('status').text());
+    $('#reasoncode').html(channel.children('reasoncode').text());
+    $('#lateness').html(channel.children('lateness').text());
+    
+    $('#station_info').hide();
+    $('#train_info').show();
+}
+
+function drawStationHeaders() { 'use strict';
+    var table = $('#table');
     var row = $('<tr>');
     row.append($('<th>').html('Asema'));
     row.append($('<th>').html('Saapumisaika'));
     row.append($('<th>').html('Lähtöaika'));
     row.append($('<th>').html('Arivoitu saapumisaika'));
     row.append($('<th>').html('Arivoitu lähtöaika'));
-    row.append($('<th>').html('completed'));
     row.append($('<th>').html('Tila'));
     table.append(row);
 }
+
+// Link generation
+function getLink(input) { 'use strict';
+    return $('<a>').attr('href', '#').click(
+        function() {
+            $('#input').val(input);
+            update();
+        }).html(input);
+}
+
+function statusToString(status) {
+    switch(status) {
+        case '1':
+            return 'Ajoissa';
+        case '2':
+            return 'Myöhässä';
+        case '3':
+            return 'Paljon myöhässä';
+        case '5':
+            return 'Peruuttu';
+        default:
+            return 'Tuntematon';
+    }
+}
+
+// Helpers
+function diffToNow(timeString) { 'use strict';
+    var fields = timeString.split(':');
+    var trainMinutes = 60*parseInt(fields[0]) + parseInt(fields[1]);
+
+    var now = new Date();
+    var nowMinutes = now.getHours()*60 + now.getMinutes();
+    
+    var diff = nowMinutes - trainMinutes;
+    return diff % (24*60);
+}
+
+function getUrlParam(name) { 'use strict';
+    var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results) {
+        return results[1];
+    } else {
+        return null;
+    }
+}
 </script>
-<style type="text/css">
+
+<style type='text/css'>
     body {
         font-family:sans-serif;
     }
     
-    h1#title {
+    h1, h1 #title, h1 #input {
         color:#C00;
+        font-weight: bold;
+        font-size: 1cm;
         margin:0;
+    }
+    
+    h1 #input {
+        border: 1px dashed #666;
+        background: #ffc;
     }
     
     p#lastbuilddate {
@@ -126,50 +344,59 @@ function add_headers() { "use strict";
         font-style:italic;
     }
     
-    table#stations {
+    table#table {
         border:none;
     }
     
-    table#stations th {
+    table#table th {
         color:white;
         background:#C00;
         padding: 0.1em 1em 0.1em 1em;
     }
     
-    table#stations a {
+    table#table a {
         color:#C00;
         text-decoration:none;
     }
     
-    table#stations td {
+    table#table td {
         padding: 0.1em 0.2em 0.1em 0.2em;
     }
     
-    table#stations tr:nth-child(even) {
+    table#table tr:nth-child(even) {
         background: #FFF;
     }
     
-    table#stations tr:nth-child(odd) {
+    table#table tr:nth-child(odd) {
         background: #DDD;
+    }
+    
+    table#table tr.now td {
+        border-top: 3px solid #C00;
     }
     
 </style>
 </head>
 
 <body>
-    <input id='train_input' type="text" onchange="update()"/>
-    <h1 id='title'>...</h1>
-    <p id='lastbuilddate'>...</p>
-    <p>
-        Lähtöasema: <span id='startstation'>...</span>
-        Määränpää: <span id='endstation'>...</span>
-        Nopeus: <span id='speed'>...</span>
+    <h1>
+        <input id='input' type='text' size='8' onchange='update()'/>
+        (<span id='title'></span>)
+    </h1>
+    <p id='lastbuilddate'/>
+    <p id='station_info' style='display: none'>
+        <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
+        <label for='remote_trains'>Kaukojunat</label>
+        <input type='radio' name='train' id='local_trains' value='2'  onchange='update()'/>
+        <label for='local_trains'>Lähijunat</label>
+        <input type='radio' name='train' id='all_trains' value='0'  onchange='update()' checked='checked'/>
+        <label for='all_trains'>Kaikki</label>
     </p>
-    <p>
-        Tila: <span id='status'>...</span>
-        Syy: <span id='reasoncode'>...</span>
-        Myöhässä: <span id='lateness'>...</span>
+    <p id='train_info' style='display: none'>
+        Nopeus: <span id='status'>??</span>km/h,
+        Tila: <span id='reasoncode'>??</span> (<span id='speed'>??</span>s),
+        Syykoodi: <span id='lateness'>??</span>
     </p>
-    <table id="stations"></table>
+    <table id='table'></table>
 </body>
 </html>
