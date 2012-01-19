@@ -23,11 +23,15 @@ var STATION_XML_PROXY_URL = 'proxy.php?station=';
 var TRAIN_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=';
 var TRAIN_XML_PROXY_URL = 'proxy.php?train=';
 
+// History time to show trains in
 var HISTORY_MINUTES = 5;
 
 $(document).ready(setValues);
 $(document).ready(update);
 
+/**
+ * Set input field values from url parameters
+ */
 function setValues() { 'use strict';
     // Input
     var input = getUrlParam('asema') || 
@@ -59,6 +63,9 @@ function setValues() { 'use strict';
     }
 }
 
+/**
+ * Update page using parameter from input field.
+ */
 function update () { 'use strict';
     var input = $('#input').val().toUpperCase();
     
@@ -71,7 +78,9 @@ function update () { 'use strict';
     }
 }
 
-// Station information drawing
+/**
+ * Update page with station information.
+ */
 function updateStation(station) { 'use strict';
     if (location.protocol === 'file:') {
         $.ajax({
@@ -92,6 +101,9 @@ function updateStation(station) { 'use strict';
     }
 }
 
+/**
+ * Insert station information into page
+ */
 function drawStation(xml_doc) { 'use strict';
     // Get xml
     var xml = $(xml_doc);
@@ -117,22 +129,22 @@ function drawStation(xml_doc) { 'use strict';
     
     // Loop over items
     var items = channel.children('item');
-    var past_now = false;
+    var pastNow = false;
     items.each(function(i) {
         var item = $(this);
         var category = item.children('category').text();
-        var estimated_time = item.children('etd').text();
+        var estimatedTime = item.children('etd').text();
         
         if ((traintypes === '0' || category === traintypes) && 
-            (past_now || (diffToNow(estimated_time) < HISTORY_MINUTES))) {
+            (pastNow || diffToNow(estimatedTime) < HISTORY_MINUTES)) {
             
-            var scheduled_time = item.children('scheduleddeparttime').text();
+            var scheduledTime = item.children('scheduleddeparttime').text();
             var type = item.children('cat').text();
             var row = $('<tr>');
             
             // Check if we are past now
-            if (!past_now && diffToNow(scheduled_time) <= 0) {
-                past_now = true;
+            if (!pastNow && diffToNow(scheduledTime) <= 0) {
+                pastNow = true;
                 row.addClass('now');
             }
             
@@ -146,10 +158,10 @@ function drawStation(xml_doc) { 'use strict';
             row.append($('<td>').append(getLink(station)));
             
             //row.append($('<td>').html(item.children('scheduledtime')));
-            row.append($('<td>').html(scheduled_time));
+            row.append($('<td>').html(scheduledTime));
             
             //row.append($('<td>').html(item.children('eta')));
-            row.append($('<td>').html(estimated_time));
+            row.append($('<td>').html(estimatedTime));
             
             var status = item.children('status').text();
             var lateness = item.children('lateness').text();
@@ -168,11 +180,17 @@ function drawStation(xml_doc) { 'use strict';
     });
 }
 
+/**
+ * Show station specific information in informatin paragraph.
+ */
 function drawStationInfo() { 'use strict';
     $('#station_info').show();
     $('#train_info').hide();
 }
 
+/**
+ * Insert train table headers into #table.
+ */
 function drawTrainHeaders() { 'use strict';
     var table = $('#table');
     var row = $('<tr>');
@@ -195,7 +213,9 @@ function drawTrainHeaders() { 'use strict';
     table.append(row);
 }
 
-// Train information drawing
+/**
+ * Update the page with train information
+ */
 function updateTrain(train) { 'use strict';
     if (location.protocol === 'file:') {
         $.ajax({
@@ -216,6 +236,9 @@ function updateTrain(train) { 'use strict';
     }
 }
 
+/**
+ * Insert train data into page.
+ */
 function drawTrain(xml_doc) { 'use strict';
     var xml = $(xml_doc);
     var channel = xml.find('channel');
@@ -255,6 +278,9 @@ function drawTrain(xml_doc) { 'use strict';
     });
 }
 
+/**
+ * Show train specific information in information paragraph.
+ */
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
     $('#status').html(statusToString(channel.children('status').text()));
@@ -265,6 +291,9 @@ function drawTrainInfo(channel) { 'use strict';
     $('#train_info').show();
 }
 
+/**
+ * Insert station table headers to #table.
+ */
 function drawStationHeaders() { 'use strict';
     var table = $('#table');
     var row = $('<tr>');
@@ -277,7 +306,9 @@ function drawStationHeaders() { 'use strict';
     table.append(row);
 }
 
-// Link generation
+/**
+ * Generate link to given train/station.
+ */
 function getLink(input) { 'use strict';
     return $('<a>').attr('href', '#').click(
         function() {
@@ -286,6 +317,9 @@ function getLink(input) { 'use strict';
         }).html(input);
 }
 
+/**
+ * Get string representation of status.
+ */
 function statusToString(status) { 'use strict';
     switch(status) {
         case '1':
@@ -301,18 +335,28 @@ function statusToString(status) { 'use strict';
     }
 }
 
-// Helpers
+/**
+ * Get the duration from timeString to now() in minutes. Negative if timeString past now().
+ * Day changes at now()+12h and now()-12h.
+ */
 function diffToNow(timeString) { 'use strict';
     var fields = timeString.split(':');
     var trainMinutes = 60*parseInt(fields[0], 10) + parseInt(fields[1], 10);
     
     var now = new Date();
-    var nowMinutes = now.getHours()*60 + now.getMinutes();
+    var nowMinutes = 60*now.getHours() + now.getMinutes();
     
     var diff = nowMinutes - trainMinutes;
-    return diff % (24*60);
+    if (12*60 < Math.abs(diff)) {
+        return diff-24;
+    } else {
+        return diff;
+    }
 }
 
+/**
+ * Get the the value of the given url parameter
+ */
 function getUrlParam(name) { 'use strict';
     var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
     if (results) {
