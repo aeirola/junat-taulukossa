@@ -257,7 +257,7 @@ function drawTrain(xml_doc) { 'use strict';
 
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
-    $('#status').html(channel.children('status').text());
+    $('#status').html(statusToString(channel.children('status').text()));
     $('#reasoncode').html(channel.children('reasoncode').text());
     $('#lateness').html(channel.children('lateness').text());
     
@@ -305,7 +305,7 @@ function statusToString(status) { 'use strict';
 function diffToNow(timeString) { 'use strict';
     var fields = timeString.split(':');
     var trainMinutes = 60*parseInt(fields[0], 10) + parseInt(fields[1], 10);
-
+    
     var now = new Date();
     var nowMinutes = now.getHours()*60 + now.getMinutes();
     
@@ -395,9 +395,9 @@ function getUrlParam(name) { 'use strict';
         <label for='all_trains'>Kaikki</label>
     </p>
     <p id='train_info' style='display: none'>
-        Nopeus: <span id='status'>??</span>km/h,
-        Tila: <span id='reasoncode'>??</span> (<span id='speed'>??</span>s),
-        Syykoodi: <span id='lateness'>??</span>
+        Nopeus: <span id='speed'>??</span>km/h,
+        Tila: <span id='status'>??</span> (<span id='lateness'>??</span>s),
+        Syykoodi: <span id='reasoncode'>??</span>
     </p>
     <table id='table'></table>
 </body>
