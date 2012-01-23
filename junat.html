@@ -34,7 +34,8 @@ $(document).ready(update);
  */
 function setValues() { 'use strict';
     // Input
-    var input = getUrlParam('asema') || 
+    var input = getUrlParam('syote') || 
+                getUrlParam('asema') || 
                 getUrlParam('junanro') || 
                 getUrlParam('juna') || 
                 getUrlParam('input') || 
@@ -166,7 +167,7 @@ function drawStation(xml_doc) { 'use strict';
             var status = item.children('status').text();
             var lateness = item.children('lateness').text();
             row.append($('<td>').html(statusToString(status) + " (" + lateness + "s)"));
-            row.append($('<td>').html(item.children('reasoncode').text()));
+            row.append($('<td>').html(reasonToString(item.children('reasoncode').text())));
             
             // Unused data
             //row.append($('<td>').html($(this).children('pubdate').text()));
@@ -284,7 +285,7 @@ function drawTrain(xml_doc) { 'use strict';
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
     $('#status').html(statusToString(channel.children('status').text()));
-    $('#reasoncode').html(channel.children('reasoncode').text());
+    $('#reasoncode').html(reasonToString(channel.children('reasoncode').text()));
     $('#lateness').html(channel.children('lateness').text());
     
     $('#station_info').hide();
@@ -334,6 +335,88 @@ function statusToString(status) { 'use strict';
             return 'Tuntematon';
     }
 }
+
+/**
+ * Gathered by comparing with other services.
+ * Full list here http://www2.liikennevirasto.fi/julkaisut/pdf4/rhk_2008-a1_aikataulusuunnittelu_ja_web.pdf
+ */
+function reasonToString(reason) { "use strict";
+    switch (reason) {
+        case 'O1': return "O1: Allejäänti (ihminen)";
+        case 'O2': return "O2: Allejäänti (eläin)";
+        case 'O3': return "O3: Tasorisetysonnettomuus";
+        case 'O4': return "O4: Muut onnettomuudet ja vauriot";
+        case 'M1': return "M1: Matkustajaruuhka";
+        case 'M2': return "M2: Matkustajien aiheuttamia häiriöitä";
+        case 'M3': return "M3: Aikataulusta poikkeava pysähdys";
+        case 'M4': return "M4: Passi- ja tullitarkastus";
+        case 'M5': return "M5: Vankien kuormaus ja purku";
+        case 'M6': return "M6: Pysähtymisajan ylitys";
+        case 'T1': return "T1: Tavaran kuormaus ja purku";
+        case 'T2': return "T2: Postin kuormaus ja purku";
+        case 'T3': return "T3: Ravintolavaunun kuormaus";
+        case 'T4': return "T4: Aikataulusta poikkeava pysähdys";
+        case 'L1': return "L1: Yhteysliikenteen odotus";
+        case 'L2': return "L2: Junakohtaus, edellä kulkeva juna tai sivuutus";
+        case 'L3': return "L3: Ahtaus ratapihalla";
+        case 'L4': return "L4: Risteävät kulkutiet";
+        case 'L5': return "L5: Myöhästyminen ulkomailta";
+        case 'L6': return "L6: Häiriö päivystystyössä";
+        case 'L7': return "L7: Tulojuna myöhässä";
+        case 'L8': return "L8: Liikenteenhoitovirhe";
+        case 'H1': return "H1: Henkilökunnan vaihto";
+        case 'H2': return "H2: Henkilökunnan odotus";
+        case 'H3': return "H3: Muu henkilökunnan syy";
+        case 'J1': return "J1: Vaunujen otto tai jättö";
+        case 'J2': return "J2: Vaunujen tai vaunuryhmien odotus";
+        case 'J3': return "J3: Jarrujen koettelu";
+        case 'J4': return "J4: Erikoiskuljetus";
+        case 'J5': return "J5: Alannettu SN";
+        case 'V1': return "V1: Veturin odotus";
+        case 'V2': return "V2: Veturivika ja JKV-vika veturilaitteessa";
+        case 'V3': return "V3: Veturivoiman puute";
+        case 'V4': return "V4: Veturin vaihto, lisäys tai poisto";
+        case 'K1': return "K1: Jarruvika";
+        case 'K2': return "K2: Laakerivika";
+        case 'K3': return "K3: Junan katkeaminen";
+        case 'K4': return "K4: Kytkentä tai irroitus";
+        case 'K5': return "K5: Kallistusvika";
+        case 'K6': return "K6: Lovipyörä";
+        case 'K7': return "K7: Muu junan vika";
+        case 'R1': return "R1: Tilapäiset nopeusrajoitukset";
+        case 'R2': return "R2: Este radalla";
+        case 'R3': return "R3: Radan kunnossapito- ja rakennustyöt";
+        case 'R4': return "R4: Varaukseen sivotun ajan ylitys";
+        case 'S1': return "S1: Jännitekatko";
+        case 'S2': return "S2: Tekniset sähköviat";
+        case 'S3': return "S3: Sähköradan kunnossapito- ja rakennustyöt";
+        case 'S4': return "S4: Häiriö valtakunnan sähköverkossa";
+        case 'P1': return "P1: Turvalaitevika";
+        case 'P2': return "P2: Opastinvika";
+        case 'P3': return "P3: Vaihdevika";
+        case 'P4': return "P4: JKV-vika ratalaitteessa";
+        case 'P5': return "P5: Linja tai ratapiharadiovika tai puhelinvika";
+        case 'P6': return "P6: GSM-R -vika";
+        case 'P7': return "P7: Valvontalaitevika tai aiheeton hälytys";
+        case 'I1': return "I1: Sää";
+        case 'I2': return "I2: Lumiesteet";
+        case 'I3': return "I3: Asiattomat radalla liikkujat tai ilkivalta";
+        case 'I4': return "I4: Muut häiriöt";
+        case 'E1': return "E1: Tulojuna etuajassa";
+        case 'E2': return "E2: Vaihtotöitä vähän tai ei ollenkaan";
+        case 'E3': return "E3: Pieni junakoko";
+        case 'E4': return "E4: Kääntöajan alitus";
+        case 'E5': return "E5: Veturina kulku";
+        case 'E6': return "E6: Ajoajan alits / liikennetekniset syyt";
+        case 'E7': return "E7: Muu syy";
+        default: return reason;
+    }
+}
+
+/**
+ * List of station code mappings
+ * http://www.vr.fi/fi/index/palvelut/mobiilipalvelut/popup_asemien_tunnukset.html
+ */
 
 /**
  * Get the duration from timeString to now() in minutes. Negative if timeString past now().
@@ -443,7 +526,7 @@ function getUrlParam(name) { 'use strict';
     <p id='train_info' style='display: none'>
         Nopeus: <span id='speed'>??</span>km/h,
         Tila: <span id='status'>??</span> (<span id='lateness'>??</span>s),
-        Syykoodi: <span id='reasoncode'>??</span>
+        Syy: <span id='reasoncode'>??</span>
     </p>
     <table id='table'></table>
 </body>
