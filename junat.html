@@ -26,8 +26,12 @@ var TRAIN_XML_PROXY_URL = 'proxy.php?train=';
 // History time to show trains in
 var HISTORY_MINUTES = 5;
 
-$(document).ready(setValues);
-$(document).ready(update);
+$(document).ready(onReady);
+
+function onReady() {
+    setValues();
+    update();
+}
 
 /**
  * Set input field values from url parameters
@@ -64,10 +68,20 @@ function setValues() { 'use strict';
     }
 }
 
+function updateState() {
+    var input = $('#input').val();
+    var category = $('input:radio[name=train]:checked').val();
+    
+    var params = "?syote=" + input + "&laji=" + category;
+    
+    $('#page_link').attr('href', params);
+}
+
 /**
  * Update page using parameter from input field.
  */
 function update () { 'use strict';
+    updateState();
     var input = $('#input').val().toUpperCase();
     
     if (/\d/.test(input)) {
@@ -456,6 +470,25 @@ function getUrlParam(name) { 'use strict';
 <style type='text/css'>
     body {
         font-family:sans-serif;
+        max-width: 50em;
+    }
+    
+    a {
+        color:#C00;
+        text-decoration:none;
+    }
+    
+    p#page_info {
+        float: right;
+        text-align: right;
+    }
+    
+    div#about {
+        background: #ffc;
+        border: 3px dashed #C00;
+        border-radius: 1em;
+        padding: 1em;
+        margin: 0 8em 2em 0;
     }
     
     h1, h1 #title, h1 #input {
@@ -477,6 +510,7 @@ function getUrlParam(name) { 'use strict';
     }
     
     table#table {
+        width: 100%;
         border:none;
     }
     
@@ -484,11 +518,6 @@ function getUrlParam(name) { 'use strict';
         color:white;
         background:#C00;
         padding: 0.1em 1em 0.1em 1em;
-    }
-    
-    table#table a {
-        color:#C00;
-        text-decoration:none;
     }
     
     table#table td {
@@ -511,11 +540,33 @@ function getUrlParam(name) { 'use strict';
 </head>
 
 <body>
+    <p id='page_info'>
+        <a id="page_link" href="?">Linkki valintaan</a><br/>
+        <a id="about_link" href="#" onclick="$('#about').toggle();">?</a>
+    </p>
+    <div id='about' style='display: none'>
+        <p>
+            Tämä sivu on käyttöliittymä VRn tarjoaman 
+            <a href="http://www.vr.fi/fi/index/aikataulut/junatkartalla.html">Junat kartalla</a> datalle, joka on 
+            saatavissa avoimen 
+            <a href="http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/">rajapinnan</a> kautta. 
+            VR tarjoaa myös 
+            <a href="http://www.vr.fi/fi/index/aikataulut/liikennetilanne/junienkulkutiedot.html.stx">oman</a> 
+            perinteisen taulukkonäkymän datasta, mutta se ei ole yhtä kattava.
+        </p>
+        <p>
+            Projekti löytyy <a href="https://github.com/aeirola/junat-taulukossa">GitHubista</a>.
+            Kysymyksiä ja kommentteja saa laittaa osoitteeseen etu.suku@iki.fi
+        </p>
+        <p>
+            <a href="http://iki.fi/aeirola/">Axel Eirola</a>, 2012
+        </p>
+    </div>
     <h1>
         <input id='input' type='text' size='8' onchange='update()'/>
         (<span id='title'></span>)
     </h1>
-    <p id='lastbuilddate'></p>
+    <p id='lastbuilddate' onclick='update()'></p>
     <p id='station_info' style='display: none'>
         <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
         <label for='remote_trains'>Kaukojunat</label>
