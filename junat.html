@@ -380,7 +380,7 @@ function drawTrain(xml_doc) { 'use strict';
         row.append(departTimeRow);
         
         // Status
-        var status = item.children('status').text() || '00';
+        var status = item.children('status').text();
         row.append($('<td>').html(statusToString(status)));
         table.append(row);
     });
@@ -392,13 +392,17 @@ function drawTrain(xml_doc) { 'use strict';
  */
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
+    
     var statusString = statusToString(channel.children('status').text());
     var lateness = channel.children('lateness').text();
     if (lateness !== '0') {
         statusString += ", " + lateness + "s";
     }
     $('#status').html(statusString);
-    $('#reasoncode').html(reasonToString(channel.children('reasoncode').text()));
+    
+    var reasonCode = channel.children('reasoncode').text();
+    reasonCode = (reasonCode == "" ? "00" : reasonCode);
+    $('#reasoncode').html(reasonToString(reasonCode));
     
     $('#station_info').hide();
     $('#train_info').show();
