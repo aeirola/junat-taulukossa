@@ -246,13 +246,20 @@ function drawStation(xml_doc) { 'use strict';
             
             //row.append($('<td>').html(item.children('scheduledtime')));
             row.append($('<td>').html(scheduledTime));
-            
-            //row.append($('<td>').html(item.children('eta')));
-            row.append($('<td>').html(estimatedTime));
+            var timeRow = $('<td>');
+            if (scheduledTime !== estimatedTime) {
+                //row.append($('<td>').html(item.children('eta')));
+                timeRow.html(estimatedTime);
+            }
+            row.append(timeRow);
             
             var status = item.children('status').text();
             var lateness = item.children('lateness').text();
-            row.append($('<td>').html(statusToString(status) + " (" + lateness + "s)"));
+            var statusString = statusToString(status);
+            if (lateness !== '0') {
+                statusString += ", " + lateness + "s";
+            }
+            row.append($('<td>').html(statusString));
             row.append($('<td>').html(reasonToString(item.children('reasoncode').text())));
             
             // Unused data
@@ -355,12 +362,25 @@ function drawTrain(xml_doc) { 'use strict';
         var station = item.children('stationcode').text();
         row.append($('<td>').append(getLink(station)));
         
-        row.append($('<td>').html($(this).children('scheduledtime').text()));
-        row.append($('<td>').html($(this).children('scheduleddeparttime').text()));
-        row.append($('<td>').html($(this).children('eta').text()));
-        row.append($('<td>').html($(this).children('etd').text()));
-
-        var status = $(this).children('status').text();
+        // Times
+        var scheduledTime = item.children('scheduledtime').text();
+        var scheduledDepartTime = item.children('scheduleddeparttime').text();
+        var estimatedTime = item.children('eta').text();
+        var estimatedDepartTime = item.children('etd').text();
+        row.append($('<td>').html(scheduledTime));
+        row.append($('<td>').html(scheduledDepartTime));
+        
+        var timeRow = $('<td>');
+        var departTimeRow = $('<td>');
+        if (scheduledTime !== estimatedTime) {
+            timeRow.html(estimatedTime);
+            departTimeRow.html(estimatedDepartTime);
+        }
+        row.append(timeRow);
+        row.append(departTimeRow);
+        
+        // Status
+        var status = item.children('status').text() || '00';
         row.append($('<td>').html(statusToString(status)));
         table.append(row);
     });
@@ -372,9 +392,13 @@ function drawTrain(xml_doc) { 'use strict';
  */
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
-    $('#status').html(statusToString(channel.children('status').text()));
+    var statusString = statusToString(channel.children('status').text());
+    var lateness = channel.children('lateness').text();
+    if (lateness !== '0') {
+        statusString += ", " + lateness + "s";
+    }
+    $('#status').html(statusString);
     $('#reasoncode').html(reasonToString(channel.children('reasoncode').text()));
-    $('#lateness').html(channel.children('lateness').text());
     
     $('#station_info').hide();
     $('#train_info').show();
@@ -401,7 +425,7 @@ function drawStationHeaders() { 'use strict';
 function getLink(input) { 'use strict';
     return $('<a>').attr('href', '#').click(
         function() {
-            $('#input').val(input);
+            setInput(input);
             update();
         }).html(input);
 }
@@ -497,6 +521,7 @@ function reasonToString(reason) { "use strict";
         case 'E5': return "E5: Veturina kulku";
         case 'E6': return "E6: Ajoajan alits / liikennetekniset syyt";
         case 'E7': return "E7: Muu syy";
+        case '00': return "Tuntematon";
         default: return reason;
     }
 }
@@ -583,6 +608,18 @@ function getUrlParam(name) { 'use strict';
         font-style:italic;
     }
     
+    span.label {
+        font-weight:bold;
+    }
+    
+    span.label:after {
+        content: ":";
+    }
+    
+    span#speed:after {
+        content: "km/h";
+    }
+    
     table#table {
         width: 100%;
         border:none;
@@ -635,7 +672,7 @@ function getUrlParam(name) { 'use strict';
         </p>
     </div>
     <h1>
-        <input id='input' type='text' size='8' onclick='update()'/>
+        <input id='input' type='text' size='8' onchange='update()'/>
         (<span id='title'></span>)
     </h1>
     <p id='timeinfo'>
@@ -643,17 +680,17 @@ function getUrlParam(name) { 'use strict';
         <span id='loading'>Loading...</span>
     </p>
     <p id='station_info' style='display: none'>
-        <input type='radio' name='train' id='remote_trains' value='1' onclick='update()'/>
+        <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
         <label for='remote_trains'>Kaukojunat</label>
-        <input type='radio' name='train' id='local_trains' value='2'  onclick='update()'/>
+        <input type='radio' name='train' id='local_trains' value='2'  onchange='update()'/>
         <label for='local_trains'>Lähijunat</label>
-        <input type='radio' name='train' id='all_trains' value='0'  onclick='update()' checked='checked'/>
+        <input type='radio' name='train' id='all_trains' value='0'  onchange='update()' checked='checked'/>
         <label for='all_trains'>Kaikki</label>
     </p>
     <p id='train_info' style='display: none'>
-        Nopeus: <span id='speed'>??</span>km/h,
-        Tila: <span id='status'>??</span> (<span id='lateness'>??</span>s),
-        Syy: <span id='reasoncode'>??</span>
+        <span class="label">Nopeus</span> <span id='speed'>??</span>
+        <span class="label">Tila</span> <span id='status'>??</span>
+        <span class="label">Syy</span> <span id='reasoncode'>??</span>
     </p>
     <table id='table'></table>
 </body>
