@@ -120,6 +120,10 @@ function updateLink() { 'use strict';
  * Update history state
  */
 function updateState() { 'use strict';
+    if (!window.history) {
+        return;
+    }
+    
     var input = getInput();
     var type = getType();
     var url = "?syote=" + input + "&laji=" + type;
@@ -170,6 +174,7 @@ function updateStation(station) { 'use strict';
             type: 'GET',
             url: STATION_XML_URL + station,
             dataType: 'xml',
+            cache: false,
             success: drawStation
         });
     } else {
@@ -177,6 +182,7 @@ function updateStation(station) { 'use strict';
             type: 'GET',
             url: STATION_XML_PROXY_URL + station,
             dataType: 'xml',
+            cache: false,
             success: drawStation
         });
     }
@@ -571,7 +577,7 @@ function getUrlParam(name) { 'use strict';
         background: #ffc;
     }
     
-    p#lastbuilddate {
+    p#timeinfo {
         color:gray;
         margin:0;
         font-style:italic;
@@ -629,17 +635,19 @@ function getUrlParam(name) { 'use strict';
         </p>
     </div>
     <h1>
-        <input id='input' type='text' size='8' onchange='update()'/>
+        <input id='input' type='text' size='8' onclick='update()'/>
         (<span id='title'></span>)
-        <spane id='loading'>Loading...</span>
     </h1>
-    <p id='lastbuilddate' onclick='update()'></p>
+    <p id='timeinfo'>
+        <span id='lastbuilddate' onclick='update()'></span>
+        <span id='loading'>Loading...</span>
+    </p>
     <p id='station_info' style='display: none'>
-        <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
+        <input type='radio' name='train' id='remote_trains' value='1' onclick='update()'/>
         <label for='remote_trains'>Kaukojunat</label>
-        <input type='radio' name='train' id='local_trains' value='2'  onchange='update()'/>
+        <input type='radio' name='train' id='local_trains' value='2'  onclick='update()'/>
         <label for='local_trains'>Lähijunat</label>
-        <input type='radio' name='train' id='all_trains' value='0'  onchange='update()' checked='checked'/>
+        <input type='radio' name='train' id='all_trains' value='0'  onclick='update()' checked='checked'/>
         <label for='all_trains'>Kaikki</label>
     </p>
     <p id='train_info' style='display: none'>
