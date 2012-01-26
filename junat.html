@@ -28,9 +28,12 @@ var HISTORY_MINUTES = 5;
 
 $(document).ready(onReady);
 
-function onReady() {
+/**
+ * Initialize on load
+ */
+function onReady() { 'use strict';
     setValues();
-    update();
+    window.addEventListener('popstate', popState, false);
 }
 
 /**
@@ -44,45 +47,100 @@ function setValues() { 'use strict';
                 getUrlParam('juna') || 
                 getUrlParam('input') || 
                 'HKI';
-    $('#input').val(input);
-    
+    setInput(input);
     // Train type
-    var train_type = getUrlParam('junalaji') || 
-                     getUrlParam('laji') || 
-                     getUrlParam('cat') || 
-                     getUrlParam('category') || 
-                     '0';
-    switch(train_type) {
-        case '1':
-            $('#remote_trains').prop('checked', true);
-            break;
-        case '2':
-            $('#local_trains').prop('checked', true);
-            break;
-        case '0':
-            $('#all_trains').prop('checked', true);
-            break;
-        default:
-            $('#all_trains').prop('checked', true);
-            break;
-    }
+    var type = getUrlParam('junalaji') || 
+               getUrlParam('laji') || 
+               getUrlParam('cat') || 
+               getUrlParam('category') || 
+               '0';
+    setType(type);
 }
 
-function updateState() {
-    var input = $('#input').val();
-    var category = $('input:radio[name=train]:checked').val();
-    
-    var params = "?syote=" + input + "&laji=" + category;
-    
-    $('#page_link').attr('href', params);
+/**
+ * Get input value from field
+ */
+function getInput() { 'use strict';
+    return $('#input').val();
+}
+
+/**
+ * Set input value to field
+ */
+function setInput(input) { 'use strict';
+    $('#input').val(input);
+}
+
+/**
+ * Get train type value from field
+ */
+function getType() { 'use strict';
+    return $('input:radio[name=train]:checked').val();
+}
+
+/**
+ * Set train type to field
+ */
+function setType(type) { 'use strict';
+    switch(type) {
+    case '1':
+        $('#remote_trains').prop('checked', true);
+        break;
+    case '2':
+        $('#local_trains').prop('checked', true);
+        break;
+    default:
+        $('#all_trains').prop('checked', true);
+        break;
+    }
 }
 
 /**
  * Update page using parameter from input field.
  */
 function update () { 'use strict';
+    updateLink();
     updateState();
-    var input = $('#input').val().toUpperCase();
+    updatePage();
+}
+
+/**
+ * Update state link
+ */
+function updateLink() { 'use strict';
+    var input = getInput();
+    var type = getType();
+    
+    var url = "?syote=" + input + "&laji=" + type;
+    $('#page_link').attr('href', url);
+}
+
+/**
+ * Update history state
+ */
+function updateState() { 'use strict';
+    var input = getInput();
+    var type = getType();
+    
+    var data = {input: input, type: type};
+    window.history.pushState(data, window.title, url);
+}
+
+/**
+ * React on history state
+ */
+function popState(e) { 'use strict';
+    setInput(e.input);
+    setType(e.type);
+    updateLink();
+    updatePage();
+}
+
+/**
+ * Update page contents
+ */
+function updatePage() { 'use strict';
+    var input = getInput();
     
     if (/\d/.test(input)) {
         // Trains contain numbers
@@ -135,7 +193,7 @@ function drawStation(xml_doc) { 'use strict';
     drawStationInfo();
     
     // Traintypes to show
-    var traintypes = $('input:radio[name=train]:checked').val();
+    var traintypes = getType();
     
     // Get and init table
     var table = $('#table');
@@ -535,10 +593,8 @@ function getUrlParam(name) { 'use strict';
     table#table tr.now td {
         border-top: 3px solid #C00;
     }
-    
 </style>
 </head>
-
 <body>
     <p id='page_info'>
         <a id="page_link" href="?">Linkki valintaan</a><br/>
