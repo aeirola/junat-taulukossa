@@ -33,6 +33,7 @@ $(document).ready(onReady);
  */
 function onReady() { 'use strict';
     setValues();
+    update();
     window.addEventListener('popstate', popState, false);
 }
 
@@ -61,14 +62,14 @@ function setValues() { 'use strict';
  * Get input value from field
  */
 function getInput() { 'use strict';
-    return $('#input').val();
+    return $('#input').val().toUpperCase();
 }
 
 /**
  * Set input value to field
  */
 function setInput(input) { 'use strict';
-    $('#input').val(input);
+    $('#input').val(input.toUpperCase());
 }
 
 /**
@@ -121,6 +122,7 @@ function updateLink() { 'use strict';
 function updateState() { 'use strict';
     var input = getInput();
     var type = getType();
+    var url = "?syote=" + input + "&laji=" + type;
     
     var data = {input: input, type: type};
     window.history.pushState(data, window.title, url);
@@ -130,10 +132,12 @@ function updateState() { 'use strict';
  * React on history state
  */
 function popState(e) { 'use strict';
-    setInput(e.input);
-    setType(e.type);
-    updateLink();
-    updatePage();
+    if (e.state) {
+        setInput(e.state.input);
+        setType(e.state.type);
+        updateLink();
+        updatePage();
+    }
 }
 
 /**
@@ -141,6 +145,8 @@ function popState(e) { 'use strict';
  */
 function updatePage() { 'use strict';
     var input = getInput();
+
+    $('#loading').show();
     
     if (/\d/.test(input)) {
         // Trains contain numbers
@@ -149,6 +155,10 @@ function updatePage() { 'use strict';
         // Stations don't
         updateStation(input);
     }
+}
+
+function updatedPage() {
+    $('#loading').hide();
 }
 
 /**
@@ -160,7 +170,6 @@ function updateStation(station) { 'use strict';
             type: 'GET',
             url: STATION_XML_URL + station,
             dataType: 'xml',
-            cache: false,
             success: drawStation
         });
     } else {
@@ -168,7 +177,6 @@ function updateStation(station) { 'use strict';
             type: 'GET',
             url: STATION_XML_PROXY_URL + station,
             dataType: 'xml',
-            cache: false,
             success: drawStation
         });
     }
@@ -251,6 +259,7 @@ function drawStation(xml_doc) { 'use strict';
             table.append(row);
         }
     });
+    updatedPage();
 }
 
 /**
@@ -349,6 +358,7 @@ function drawTrain(xml_doc) { 'use strict';
         row.append($('<td>').html(statusToString(status)));
         table.append(row);
     });
+    updatedPage();
 }
 
 /**
@@ -621,6 +631,7 @@ function getUrlParam(name) { 'use strict';
     <h1>
         <input id='input' type='text' size='8' onchange='update()'/>
         (<span id='title'></span>)
+        <spane id='#loading'> Loading... </span>
     </h1>
     <p id='lastbuilddate' onclick='update()'></p>
     <p id='station_info' style='display: none'>
