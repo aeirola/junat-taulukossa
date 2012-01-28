@@ -398,7 +398,7 @@ function drawTrainInfo(channel) { 'use strict';
     $('#status').html(statusString);
     
     var reasonCode = channel.children('reasoncode').text();
-    reasonCode = (reasonCode == "" ? "00" : reasonCode);
+    reasonCode = (reasonCode === "" ? "00" : reasonCode);
     $('#reasoncode').html(reasonToString(reasonCode));
     
     $('#station_info').hide();
@@ -608,18 +608,17 @@ function getUrlParam(name) { 'use strict';
 
 <style type='text/css'>
     body {
-        font-family:sans-serif;
+        font-family: sans-serif;
         max-width: 50em;
     }
     
     a {
-        color:#C00;
-        text-decoration:none;
+        color: #c00;
+        text-decoration: none;
     }
     
     a:hover {
         cursor: pointer; 
-        cursor: hand;
     }
     
     p#page_info {
@@ -628,33 +627,33 @@ function getUrlParam(name) { 'use strict';
     }
     
     div#about {
-        background: #ffc;
-        border: 3px dashed #C00;
+        background-color: #ffc;
+        border: 3px dashed #c00;
         border-radius: 1em;
         padding: 1em;
         margin: 0 8em 2em 0;
     }
     
     h1, h1 #title, h1 #input {
-        color:#C00;
+        color: #c00;
         font-weight: bold;
         font-size: 1cm;
-        margin:0;
+        margin: 0;
     }
     
     h1 #input {
         border: 1px dashed #666;
-        background: #ffc;
+        background-color: #ffc;
     }
     
     p#timeinfo {
-        color:gray;
-        margin:0;
-        font-style:italic;
+        color: gray;
+        margin: 0;
+        font-style: italic;
     }
     
     span.label {
-        font-weight:bold;
+        font-weight: bold;
     }
     
     span.label:after {
@@ -667,12 +666,12 @@ function getUrlParam(name) { 'use strict';
     
     table#table {
         width: 100%;
-        border:none;
+        border: none;
     }
     
     table#table th {
-        color:white;
-        background:#C00;
+        color: white;
+        background-color: #c00;
         padding: 0.1em 1em 0.1em 1em;
     }
     
@@ -681,15 +680,15 @@ function getUrlParam(name) { 'use strict';
     }
     
     table#table tr:nth-child(even) {
-        background: #FFF;
+        background-color: #fff;
     }
     
     table#table tr:nth-child(odd) {
-        background: #DDD;
+        background-color: #ddd;
     }
     
     table#table tr.now td {
-        border-top: 3px solid #C00;
+        border-top: 3px solid #c00;
     }
 </style>
 </head>
