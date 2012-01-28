@@ -33,29 +33,8 @@ $(document).ready(onReady);
  */
 function onReady() { 'use strict';
     setValues();
-    update();
-    window.addEventListener('popstate', popState, false);
-}
-
-/**
- * Set input field values from url parameters
- */
-function setValues() { 'use strict';
-    // Input
-    var input = getUrlParam('syote') || 
-                getUrlParam('asema') || 
-                getUrlParam('junanro') || 
-                getUrlParam('juna') || 
-                getUrlParam('input') || 
-                'HKI';
-    setInput(input);
-    // Train type
-    var type = getUrlParam('junalaji') || 
-               getUrlParam('laji') || 
-               getUrlParam('cat') || 
-               getUrlParam('category') || 
-               '0';
-    setType(type);
+    updatePage();
+    window.addEventListener('popstate', popState);
 }
 
 /**
@@ -97,29 +76,30 @@ function setType(type) { 'use strict';
 }
 
 /**
- * Update page using parameter from input field.
+ * Set input field values from url parameters
  */
-function update () { 'use strict';
-    updateLink();
-    updateState();
-    updatePage();
-}
-
-/**
- * Update state link
- */
-function updateLink() { 'use strict';
-    var input = getInput();
-    var type = getType();
-    
-    var url = "?syote=" + input + "&laji=" + type;
-    $('#page_link').attr('href', url);
+function setValues() { 'use strict';
+    // Input
+    var input = getUrlParam('syote') || 
+                getUrlParam('asema') || 
+                getUrlParam('junanro') || 
+                getUrlParam('juna') || 
+                getUrlParam('input') || 
+                'HKI';
+    setInput(input);
+    // Train type
+    var type = getUrlParam('junalaji') || 
+               getUrlParam('laji') || 
+               getUrlParam('cat') || 
+               getUrlParam('category') || 
+               '0';
+    setType(type);
 }
 
 /**
  * Update history state
  */
-function updateState() { 'use strict';
+function pushState() { 'use strict';
     if (!window.history) {
         return;
     }
@@ -127,30 +107,33 @@ function updateState() { 'use strict';
     var input = getInput();
     var type = getType();
     var url = "?syote=" + input + "&laji=" + type;
-    
-    var data = {input: input, type: type};
-    window.history.pushState(data, window.title, url);
+    window.history.pushState(null, window.title, url);
 }
 
 /**
  * React on history state
  */
 function popState(e) { 'use strict';
-    if (e.state) {
-        setInput(e.state.input);
-        setType(e.state.type);
-        updateLink();
-        updatePage();
-    }
+    setValues();
+    updatePage();
 }
 
 /**
- * Update page contents
+ * Update page using parameter from input field.
  */
-function updatePage() { 'use strict';
-    var input = getInput();
+function update () { 'use strict';
+    pushState();
+    updatePage();
+}
 
+function updatePage() { 'use strict';
     $('#loading').show();
+    
+    var input = getInput();
+    var type = getType();
+    
+    var url = "?syote=" + input + "&laji=" + type;
+    $('#page_link').attr('href', url);
     
     if (/\d/.test(input)) {
         // Trains contain numbers
@@ -175,7 +158,8 @@ function updateStation(station) { 'use strict';
             url: STATION_XML_URL + station,
             dataType: 'xml',
             cache: false,
-            success: drawStation
+            success: drawStation,
+            error: updateError
         });
     } else {
         $.ajax({
@@ -183,7 +167,8 @@ function updateStation(station) { 'use strict';
             url: STATION_XML_PROXY_URL + station,
             dataType: 'xml',
             cache: false,
-            success: drawStation
+            success: drawStation,
+            error: updateError
         });
     }
 }
@@ -195,6 +180,11 @@ function drawStation(xml_doc) { 'use strict';
     // Get xml
     var xml = $(xml_doc);
     var channel = xml.find('channel');
+    
+    if (!channel) {
+        updateError(null, "station", null);
+        return;
+    }
     
     // Header data
     $('#title').html(channel.children('title').text());
@@ -318,7 +308,8 @@ function updateTrain(train) { 'use strict';
             url: TRAIN_XML_URL + train,
             dataType: 'xml',
             cache: false,
-            success: drawTrain
+            success: drawTrain,
+            error: updateError
         });
     } else {
         $.ajax({
@@ -326,7 +317,8 @@ function updateTrain(train) { 'use strict';
             url: TRAIN_XML_PROXY_URL + train,
             dataType: 'xml',
             cache: false,
-            success: drawTrain
+            success: drawTrain,
+            error: updateError
         });
     }
 }
@@ -337,6 +329,11 @@ function updateTrain(train) { 'use strict';
 function drawTrain(xml_doc) { 'use strict';
     var xml = $(xml_doc);
     var channel = xml.find('channel');
+    
+    if (!channel) {
+        updateError(null, "train", null);
+        return;
+    }
     
     $('#title').html(channel.children('title').text());
     $('#lastbuilddate').html(channel.children('lastbuilddate').text());
@@ -424,10 +421,49 @@ function drawStationHeaders() { 'use strict';
 }
 
 /**
+ * Clera view and mark as failure
+ */
+function updateError(jqXHR, textStatus, errorThrown) { 'use strict';
+    var title = "Virhe";
+    var lastBuildDate;
+    switch (textStatus) {
+        case "station":
+            lastBuildDate = "Asemaa ei löytynyt";
+            break;
+        case "train":
+            lastBuildDate = "Junaa ei löytynyt";
+            break;
+        case "timeout":
+            lastBuildDate = "Palvelin ei vastaa";
+            break;
+        case "error":
+            lastBuildDate = "AJAX virhe";
+            break;
+        case "abort":
+            lastBuildDate = "Pyyntö keskeytetty";
+            break;
+        case "parsererror":
+            lastBuildDate = "Virheellinen muoto";
+            break;
+        default:
+            lastBuildDate = "Tuntematon virhe: " + textStatus;
+            break;
+    }
+    $('#title').html(title);
+    $('#lastbuilddate').html(lastBuildDate);
+    
+    $('#table').empty();
+    $('#station_info').hide();
+    $('#train_info').hide();
+    
+    updatedPage();
+}
+
+/**
  * Generate link to given train/station.
  */
 function getLink(input) { 'use strict';
-    return $('<a>').attr('href', '#').click(
+    return $('<a>').click(
         function() {
             setInput(input);
             update();
@@ -581,6 +617,11 @@ function getUrlParam(name) { 'use strict';
         text-decoration:none;
     }
     
+    a:hover {
+        cursor: pointer; 
+        cursor: hand;
+    }
+    
     p#page_info {
         float: right;
         text-align: right;
@@ -655,7 +696,7 @@ function getUrlParam(name) { 'use strict';
 <body>
     <p id='page_info'>
         <a id="page_link" href="?">Linkki valintaan</a><br/>
-        <a id="about_link" href="#" onclick="$('#about').toggle();">?</a>
+        <a id="about_link" onclick="$('#about').toggle();">?</a>
     </p>
     <div id='about' style='display: none'>
         <p>
@@ -681,7 +722,7 @@ function getUrlParam(name) { 'use strict';
     </h1>
     <p id='timeinfo'>
         <span id='lastbuilddate' onclick='update()'></span>
-        <span id='loading'>Loading...</span>
+        <span id='loading'>Päivitetään...</span>
     </p>
     <p id='station_info' style='display: none'>
         <input type='radio' name='train' id='remote_trains' value='1' onchange='update()'/>
