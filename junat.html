@@ -443,7 +443,17 @@ function updateError(jqXHR, textStatus, errorThrown) { 'use strict';
             lastBuildDate = "Pyyntö keskeytetty";
             break;
         case "parsererror":
-            lastBuildDate = "Virheellinen muoto";
+            switch (this.success) {
+                case drawStation:
+                    lastBuildDate = "Asemaa ei löytynyt";
+                    break;
+                case drawTrain:
+                    lastBuildDate = "Junaa ei löytynyt";
+                    break;
+                default:
+                    lastBuildDate = "Virheellinen tiedostomuoto vastaanotettu";
+                    break;
+            }
             break;
         default:
             lastBuildDate = "Tuntematon virhe: " + textStatus;
@@ -567,12 +577,6 @@ function reasonToString(reason) { "use strict";
 }
 
 /**
- * List of station code mappings
- * http://www.vr.fi/fi/index/palvelut/mobiilipalvelut/popup_asemien_tunnukset.html
- */
-
-
-/**
  * Get the duration from timeString to now() in minutes. Negative if timeString past now().
  * Day changes at now()+12h and now()-12h.
  */
@@ -599,7 +603,7 @@ function diffToNow(timeString) { 'use strict';
 function getUrlParam(name) { 'use strict';
     var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
     if (results) {
-        return results[1];
+        return decodeURIComponent(results[1]);
     } else {
         return null;
     }
@@ -705,8 +709,12 @@ function getUrlParam(name) { 'use strict';
             <a href="http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/">rajapinnan</a> kautta. 
             VR tarjoaa myös 
             <a href="http://www.vr.fi/fi/index/aikataulut/liikennetilanne/junienkulkutiedot.html.stx">oman</a> 
-            perinteisen taulukkonäkymän datasta, mutta se ei ole yhtä kattava.
+            perinteisen taulukkonäkymän junien aikataulista, mutta sen käyttämä data ei valitettavasti ole yhtä 
+            kattava.
         </p>
+        <p>
+            Jos et keksi oman asemasi tunnuksen, niin voit tarkistaa sen 
+            <a href="http://www.vr.fi/fi/index/palvelut/mobiilipalvelut/popup_asemien_tunnukset.html">täältä</a>.
         <p>
             Projekti löytyy <a href="https://github.com/aeirola/junat-taulukossa">GitHubista</a>.
             Kysymyksiä ja kommentteja saa laittaa osoitteeseen etu.suku@iki.fi
