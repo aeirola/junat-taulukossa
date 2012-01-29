@@ -290,7 +290,7 @@ function drawTrainHeaders() { 'use strict';
     //row.append($('<th>').html('scheduledtime'));
     row.append($('<th>').html('Lähtöaika'));
     //row.append($('<th>').html('eta'));
-    row.append($('<th>').html('Arivoitu aika'));
+    row.append($('<th>').html('Arvioitu aika'));
     row.append($('<th>').html('Tila'));
     //row.append($('<th>').html('Myöhässä'));
     row.append($('<th>').html('Syy'));
@@ -414,8 +414,8 @@ function drawStationHeaders() { 'use strict';
     row.append($('<th>').html('Asema'));
     row.append($('<th>').html('Saapumisaika'));
     row.append($('<th>').html('Lähtöaika'));
-    row.append($('<th>').html('Arivoitu saapumisaika'));
-    row.append($('<th>').html('Arivoitu lähtöaika'));
+    row.append($('<th>').html('Arvioitu saapumisaika'));
+    row.append($('<th>').html('Arvioitu lähtöaika'));
     row.append($('<th>').html('Tila'));
     table.append(row);
 }
@@ -713,7 +713,7 @@ function getUrlParam(name) { 'use strict';
             kattava.
         </p>
         <p>
-            Jos et keksi oman asemasi tunnuksen, niin voit tarkistaa sen 
+            Jos et keksi tietyn aseman tunnuksen, niin voit tarkistaa sen 
             <a href="http://www.vr.fi/fi/index/palvelut/mobiilipalvelut/popup_asemien_tunnukset.html">täältä</a>.
         <p>
             Projekti löytyy <a href="https://github.com/aeirola/junat-taulukossa">GitHubista</a>.
