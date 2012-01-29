@@ -247,7 +247,7 @@ function drawStation(xml_doc) { 'use strict';
             var lateness = item.children('lateness').text();
             var statusString = statusToString(status);
             if (lateness !== '0') {
-                statusString += ", " + lateness + "s";
+                statusString += ", +" + lateness/60 + " min";
             }
             row.append($('<td>').html(statusString));
             row.append($('<td>').html(reasonToString(item.children('reasoncode').text())));
@@ -393,7 +393,7 @@ function drawTrainInfo(channel) { 'use strict';
     var statusString = statusToString(channel.children('status').text());
     var lateness = channel.children('lateness').text();
     if (lateness !== '0') {
-        statusString += ", " + lateness + "s";
+        statusString += ", +" + lateness/60 + " min";
     }
     $('#status').html(statusString);
     
