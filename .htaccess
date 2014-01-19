@@ -1,4 +1,1 @@
-RewriteEngine On
-RewriteRule ^api/(.*)$ http://188.117.35.14/TrainRSS/TrainService.svc/$1 [L,P]
-
-Header set  Access-Control-Allow-Origin '*'
+DirectoryIndex junat.html
