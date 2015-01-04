@@ -1,0 +1,11 @@
+{
+  "name": "junat-taulukossa",
+  "routes": {
+    "/": "junat.html"
+  },
+  "proxy": {
+    "train_api": {
+      "origin": "http://188.117.35.14"
+    }
+  }
+}
