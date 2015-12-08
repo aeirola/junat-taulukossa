@@ -1,7 +1,0 @@
-language: node_js
-script: echo "Nothing to build"
-deploy:
-  provider: divshot
-  api_key:
-    secure: NuFMt236NZWVRfe1EFqT/fWzh9e9o5Tq0HiUEarTwUYXDs3vNmGtC4aoFFFqaZOy4wUP4pkQXH6xS5bnRaglCXjC2LFaDHMKnmG0MYaL8ETKYaFUZjGiiR9U0wJFA0J28FY07e9s6yjQGXC9qn85h649O02UmNRLPK1cPyK8RUc=
-  environment: production

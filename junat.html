@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 
+<!--
     Junat taulukossa palvelu
-    
-    Koska VR:n oma Lähtevät ja saapuvat junat (http://ext-service.vr.fi/juku/asema.action?junalaji=ll&asema=HKI) 
-    on nihkee, niin piti tehdä parempi. Perustuen VRn Junat kartalla rajapintaan 
+
+    Koska VR:n oma Lähtevät ja saapuvat junat (http://ext-service.vr.fi/juku/asema.action?junalaji=ll&asema=HKI)
+    on nihkee, niin piti tehdä parempi. Perustuen VRn Junat kartalla rajapintaan
     (http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/), tämä sivu hakee
     aseman tiedot ja näyttää ne taulukossa.
-    
+
     Axel Eirola. 2012
 -->
 <html>
@@ -17,11 +17,8 @@
     <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 
 <script type='text/javascript'>
-var STATION_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/stationInfo?station=';
-var STATION_XML_PROXY_URL = '/__/proxy/train_api/TrainRSS/TrainService.svc/stationInfo?station=';
-
-var TRAIN_XML_URL = 'http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=';
-var TRAIN_XML_PROXY_URL = '/__/proxy/train_api/TrainRSS/TrainService.svc/trainInfo?train=';
+var STATION_XML_URL = 'http://crossorigin.me/http://188.117.35.14/TrainRSS/TrainService.svc/stationInfo?station=';
+var TRAIN_XML_URL = 'http://crossorigin.me/http://188.117.35.14/TrainRSS/TrainService.svc/trainInfo?train=';
 
 // History time to show trains in
 var HISTORY_MINUTES = 5;
@@ -80,18 +77,18 @@ function setType(type) { 'use strict';
  */
 function setValues() { 'use strict';
     // Input
-    var input = getUrlParam('syote') || 
-                getUrlParam('asema') || 
-                getUrlParam('junanro') || 
-                getUrlParam('juna') || 
-                getUrlParam('input') || 
+    var input = getUrlParam('syote') ||
+                getUrlParam('asema') ||
+                getUrlParam('junanro') ||
+                getUrlParam('juna') ||
+                getUrlParam('input') ||
                 'HKI';
     setInput(input);
     // Train type
-    var type = getUrlParam('junalaji') || 
-               getUrlParam('laji') || 
-               getUrlParam('cat') || 
-               getUrlParam('category') || 
+    var type = getUrlParam('junalaji') ||
+               getUrlParam('laji') ||
+               getUrlParam('cat') ||
+               getUrlParam('category') ||
                '0';
     setType(type);
 }
@@ -103,7 +100,7 @@ function pushState() { 'use strict';
     if (!window.history) {
         return;
     }
-    
+
     var input = getInput();
     var type = getType();
     var url = "?syote=" + input + "&laji=" + type;
@@ -128,13 +125,13 @@ function update () { 'use strict';
 
 function updatePage() { 'use strict';
     $('#loading').show();
-    
+
     var input = getInput();
     var type = getType();
-    
+
     var url = "?syote=" + input + "&laji=" + type;
     $('#page_link').attr('href', url);
-    
+
     if (/\d/.test(input)) {
         // Trains contain numbers
         updateTrain(input);
@@ -152,25 +149,14 @@ function updatedPage() { 'use strict';
  * Update page with station information.
  */
 function updateStation(station) { 'use strict';
-    if (location.protocol === 'file:') {
-        $.ajax({
-            type: 'GET',
-            url: STATION_XML_URL + station,
-            dataType: 'xml',
-            cache: false,
-            success: drawStation,
-            error: updateError
-        });
-    } else {
-        $.ajax({
-            type: 'GET',
-            url: STATION_XML_PROXY_URL + station,
-            dataType: 'xml',
-            cache: false,
-            success: drawStation,
-            error: updateError
-        });
-    }
+    $.ajax({
+        type: 'GET',
+        url: STATION_XML_URL + station,
+        dataType: 'xml',
+        cache: false,
+        success: drawStation,
+        error: updateError
+    });
 }
 
 /**
@@ -180,30 +166,30 @@ function drawStation(xml_doc) { 'use strict';
     // Get xml
     var xml = $(xml_doc);
     var channel = xml.find('channel');
-    
+
     if (!channel) {
         updateError(null, "station", null);
         return;
     }
-    
+
     // Header data
     $('#title').html(channel.children('title').text());
     $('#lastbuilddate').html(channel.children('lastbuilddate').text());
-    
+
     // Unused header data
     //$('#description').html(channel.children('description'));
     //$('#category').html(channel.children('category'));
     //$('#point').html(channel.children('point'));
     drawStationInfo();
-    
+
     // Traintypes to show
     var traintypes = getType();
-    
+
     // Get and init table
     var table = $('#table');
     table.empty();
     drawTrainHeaders();
-    
+
     // Loop over items
     var items = channel.children('item');
     var pastNow = false;
@@ -211,29 +197,29 @@ function drawStation(xml_doc) { 'use strict';
         var item = $(this);
         var category = item.children('category').text();
         var estimatedTime = item.children('etd').text();
-        
-        if ((traintypes === '0' || category === traintypes) && 
+
+        if ((traintypes === '0' || category === traintypes) &&
             (pastNow || diffToNow(estimatedTime) < HISTORY_MINUTES)) {
-            
+
             var scheduledTime = item.children('scheduleddeparttime').text();
             var type = item.children('cat').text();
             var row = $('<tr>');
-            
+
             // Check if we are past now
             if (!pastNow && diffToNow(scheduledTime) <= 0) {
                 pastNow = true;
                 row.addClass('now');
             }
-            
+
             // Train number
             var trainNr = item.children('guid').text();
             row.append($('<td>').append(getLink(trainNr).html(item.children('title').text())));
-            
+
             // Station (from / to)
             var station = item.children('tostation').text();
             //row.append($('<td>').html(item.children('fromstation')));
             row.append($('<td>').append(getLink(station)));
-            
+
             //row.append($('<td>').html(item.children('scheduledtime')));
             row.append($('<td>').html(scheduledTime));
             var timeRow = $('<td>');
@@ -242,7 +228,7 @@ function drawStation(xml_doc) { 'use strict';
                 timeRow.html(estimatedTime);
             }
             row.append(timeRow);
-            
+
             var status = item.children('status').text();
             var lateness = item.children('lateness').text();
             var statusString = statusToString(status);
@@ -251,14 +237,14 @@ function drawStation(xml_doc) { 'use strict';
             }
             row.append($('<td>').html(statusString));
             row.append($('<td>').html(reasonToString(item.children('reasoncode').text())));
-            
+
             // Unused data
             //row.append($('<td>').html($(this).children('pubdate').text()));
             //row.append($('<td>').html(type).text());
             //row.append($('<td>').html(category).text());
             //row.append($('<td>').html(item.children('description').text()));
             //row.append($('<td>').html(item.children('completed').text()));
-            
+
             table.append(row);
         }
     });
@@ -302,25 +288,14 @@ function drawTrainHeaders() { 'use strict';
  * Update the page with train information
  */
 function updateTrain(train) { 'use strict';
-    if (location.protocol === 'file:') {
-        $.ajax({
-            type: 'GET',
-            url: TRAIN_XML_URL + train,
-            dataType: 'xml',
-            cache: false,
-            success: drawTrain,
-            error: updateError
-        });
-    } else {
-        $.ajax({
-            type: 'GET',
-            url: TRAIN_XML_PROXY_URL + train,
-            dataType: 'xml',
-            cache: false,
-            success: drawTrain,
-            error: updateError
-        });
-    }
+    $.ajax({
+        type: 'GET',
+        url: TRAIN_XML_URL + train,
+        dataType: 'xml',
+        cache: false,
+        success: drawTrain,
+        error: updateError
+    });
 }
 
 /**
@@ -329,36 +304,36 @@ function updateTrain(train) { 'use strict';
 function drawTrain(xml_doc) { 'use strict';
     var xml = $(xml_doc);
     var channel = xml.find('channel');
-    
+
     if (!channel) {
         updateError(null, "train", null);
         return;
     }
-    
+
     $('#title').html(channel.children('title').text());
     $('#lastbuilddate').html(channel.children('lastbuilddate').text());
     drawTrainInfo(channel);
-    
+
     var table = $('#table');
     table.empty();
     drawStationHeaders();
-    
+
     var items = channel.children('item');
     var past_now = false;
     items.each(function(i) {
         var item = $(this);
         var completed = $(this).children('completed').text();
         var row = $('<tr>');
-        
+
         // Check if we are past now
         if (!past_now && completed === '0') {
             past_now = true;
             row.addClass('now');
         }
-        
+
         var station = item.children('stationcode').text();
         row.append($('<td>').append(getLink(station)));
-        
+
         // Times
         var scheduledTime = item.children('scheduledtime').text();
         var scheduledDepartTime = item.children('scheduleddeparttime').text();
@@ -366,7 +341,7 @@ function drawTrain(xml_doc) { 'use strict';
         var estimatedDepartTime = item.children('etd').text();
         row.append($('<td>').html(scheduledTime));
         row.append($('<td>').html(scheduledDepartTime));
-        
+
         var timeRow = $('<td>');
         var departTimeRow = $('<td>');
         if (scheduledTime !== estimatedTime) {
@@ -375,7 +350,7 @@ function drawTrain(xml_doc) { 'use strict';
         }
         row.append(timeRow);
         row.append(departTimeRow);
-        
+
         // Status
         var status = item.children('status').text();
         row.append($('<td>').html(statusToString(status)));
@@ -389,18 +364,18 @@ function drawTrain(xml_doc) { 'use strict';
  */
 function drawTrainInfo(channel) { 'use strict';
     $('#speed').html(channel.children('speed').text());
-    
+
     var statusString = statusToString(channel.children('status').text());
     var lateness = channel.children('lateness').text();
     if (lateness !== '0') {
         statusString += ", +" + lateness/60 + " min";
     }
     $('#status').html(statusString);
-    
+
     var reasonCode = channel.children('reasoncode').text();
     reasonCode = (reasonCode === "" ? "00" : reasonCode);
     $('#reasoncode').html(reasonToString(reasonCode));
-    
+
     $('#station_info').hide();
     $('#train_info').show();
 }
@@ -461,11 +436,11 @@ function updateError(jqXHR, textStatus, errorThrown) { 'use strict';
     }
     $('#title').html(title);
     $('#lastbuilddate').html(lastBuildDate);
-    
+
     $('#table').empty();
     $('#station_info').hide();
     $('#train_info').hide();
-    
+
     updatedPage();
 }
 
@@ -583,10 +558,10 @@ function reasonToString(reason) { "use strict";
 function diffToNow(timeString) { 'use strict';
     var fields = timeString.split(':');
     var trainMinutes = 60*parseInt(fields[0], 10) + parseInt(fields[1], 10);
-    
+
     var now = new Date();
     var nowMinutes = 60*now.getHours() + now.getMinutes();
-    
+
     var diff = nowMinutes - trainMinutes;
     if ( diff < -12*60) {
         return diff+24*60;
@@ -615,21 +590,21 @@ function getUrlParam(name) { 'use strict';
         font-family: sans-serif;
         max-width: 50em;
     }
-    
+
     a {
         color: #c00;
         text-decoration: none;
     }
-    
+
     a:hover {
-        cursor: pointer; 
+        cursor: pointer;
     }
-    
+
     p#page_info {
         float: right;
         text-align: right;
     }
-    
+
     div#about {
         background-color: #ffc;
         border: 3px dashed #c00;
@@ -637,60 +612,60 @@ function getUrlParam(name) { 'use strict';
         padding: 1em;
         margin: 0 8em 2em 0;
     }
-    
+
     h1, h1 #title, h1 #input {
         color: #c00;
         font-weight: bold;
         font-size: 1cm;
         margin: 0;
     }
-    
+
     h1 #input {
         border: 1px dashed #666;
         background-color: #ffc;
     }
-    
+
     p#timeinfo {
         color: gray;
         margin: 0;
         font-style: italic;
     }
-    
+
     span.label {
         font-weight: bold;
     }
-    
+
     span.label:after {
         content: ":";
     }
-    
+
     span#speed:after {
         content: "km/h";
     }
-    
+
     table#table {
         width: 100%;
         border: none;
     }
-    
+
     table#table th {
         color: white;
         background-color: #c00;
         padding: 0.1em 1em 0.1em 1em;
     }
-    
+
     table#table td {
         padding: 0.1em 0.2em 0.1em 0.2em;
     }
-    
+
     table#table tr:nth-child(even) {
         background-color: #fff;
     }
-    
+
     table#table tr:nth-child(odd) {
         background-color: #ddd;
     }
-    
+
     table#table tr.now td {
         border-top: 3px solid #c00;
     }
@@ -703,17 +678,17 @@ function getUrlParam(name) { 'use strict';
     </p>
     <div id='about' style='display: none'>
         <p>
-            Tämä sivu on käyttöliittymä VRn tarjoaman 
-            <a href="http://www.vr.fi/fi/index/aikataulut/junatkartalla.html">Junat kartalla</a> datalle, joka on 
-            saatavissa avoimen 
-            <a href="http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/">rajapinnan</a> kautta. 
-            VR tarjoaa myös 
-            <a href="http://www.vr.fi/fi/index/aikataulut/liikennetilanne/junienkulkutiedot.html.stx">oman</a> 
-            perinteisen taulukkonäkymän junien aikataulista, mutta sen käyttämä data ei valitettavasti ole yhtä 
+            Tämä sivu on käyttöliittymä VRn tarjoaman
+            <a href="http://www.vr.fi/fi/index/aikataulut/junatkartalla.html">Junat kartalla</a> datalle, joka on
+            saatavissa avoimen
+            <a href="http://www.apps4finland.fi/fi/data/junat-kartalla-palvelun-rajapinta/">rajapinnan</a> kautta.
+            VR tarjoaa myös
+            <a href="http://www.vr.fi/fi/index/aikataulut/liikennetilanne/junienkulkutiedot.html.stx">oman</a>
+            perinteisen taulukkonäkymän junien aikataulista, mutta sen käyttämä data ei valitettavasti ole yhtä
             kattava.
         </p>
         <p>
-            Jos et keksi tietyn aseman tunnuksen, niin voit tarkistaa sen 
+            Jos et keksi tietyn aseman tunnuksen, niin voit tarkistaa sen
             <a href="http://www.vr.fi/fi/index/palvelut/mobiilipalvelut/popup_asemien_tunnukset.html">täältä</a>.
         <p>
             Projekti löytyy <a href="https://github.com/aeirola/junat-taulukossa">GitHubista</a>.
