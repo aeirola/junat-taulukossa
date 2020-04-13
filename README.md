@@ -12,4 +12,4 @@ VR tarjoaa aikataulutiedot julkisen [rajapinnan kautta](http://www.apps4finland.
 
 Missä?
 ------
-Käyttöliittymä on käytettävissä osoitteessa [http://junat-taulukossa.divshot.io/](http://junat-taulukossa.divshot.io/). Sivu ottaa kaksi URL-parametria "syote" ja "laji" joiden avulla voi bookmarkata tietyn aseman/junan ja junalajin. Eli esimerkiksi [http://junat-taulukossa.divshot.io/?syote=PSL&laji=2](http://junat-taulukossa.divshot.io/?syote=PSL&laji=2). Asemien koodit ei valitettavasti esillä, joten niitä pitää joko keksiä tai löytää sopivan junan kautta.
+Käyttöliittymä on käytettävissä osoitteessa [https://aeirola.github.io/junat-taulukossa/junat.html](https://aeirola.github.io/junat-taulukossa/junat.html). Sivu ottaa kaksi URL-parametria "syote" ja "laji" joiden avulla voi bookmarkata tietyn aseman/junan ja junalajin. Eli esimerkiksi [https://aeirola.github.io/junat-taulukossa/junat.html?syote=PSL&laji=2](https://aeirola.github.io/junat-taulukossa/junat.html?syote=PSL&laji=2). Asemien koodit ei valitettavasti esillä, joten niitä pitää joko keksiä tai löytää sopivan junan kautta.
